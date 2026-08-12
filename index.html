@@ -41,15 +41,13 @@
       word-break: break-all;
       animation: fadeIn 0.4s ease-in-out;
     }
+
     .my-msg { text-align: right; margin-left: 25%; }
     .other-msg { text-align: left; margin-right: 25%; }
-    /* 인물별 고유 잉크 색상 설정 */
-    .color-soleum {
-      color: #800000;
-    }
-    .color-saheon {
-      color: #386b2c; /* 2안: #21431d */
-    }
+
+    .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
+    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
+
     .input-box {
       padding: 16px 20px;
       background: #faf7f0;
@@ -85,7 +83,6 @@
 </div>
 
 <script>
-  // 배포한 구글 앱스 스크립트 웹 앱 URL을 넣으세요.
   const GAS_URL = "https://script.google.com/macros/s/AKfycbz-ZqrpYsX-17wZiBXRVxiO2utYBpt5ybm-RvY4_Nnz2qJc9b4csxuc5VPMffA8BPI0/exec";
   
   const urlParams = new URLSearchParams(window.location.search);
@@ -97,6 +94,7 @@
   let pollTimer = null;
   let isLoadingMore = false; 
   let hasMoreHistory = true; 
+  let isSending = false; // 중복 전송 방지 플래그
 
   const chatSpace = document.getElementById('chatSpace');
 
@@ -107,16 +105,13 @@
     return Math.max(5, neededCount);
   }
 
-  function createMessageNode(sender, message) {
+  function createMessageNode(sender, message, index) {
     const line = document.createElement('div');
-  
-    // 1. 내가 쓴 글이면 우측 정렬(my-msg), 상대 글이면 좌측 정렬(other-msg)
     const alignClass = (sender === currentUser) ? 'my-msg' : 'other-msg';
-  
-    // 2. 발신자 이름에 따라 고유 색상 클래스 부여 (백사헌 = 초록, 김솔음/기타 = 검정)
-    const colorClass = (sender === '백사헌') ? 'color-saheon' : 'color-soleum';
-  
+    const colorClass = (sender === '김솔음') ? 'color-soleum' : 'color-saheon';
+    
     line.className = `note-line ${alignClass} ${colorClass}`;
+    if (index) line.setAttribute('data-index', index);
     line.innerText = message;
     return line;
   }
@@ -125,9 +120,8 @@
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  // 초기 메시지 불러오기
   async function initMessages() {
-    if (!GAS_URL || GAS_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") return;
+    if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
     
     const limit = calcDynamicLimit();
     
@@ -135,10 +129,10 @@
       const res = await fetch(`${GAS_URL}?mode=init&limit=${limit}`);
       const data = await res.json();
       
-      if (data && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         chatSpace.innerHTML = '';
         data.forEach(item => {
-          const node = createMessageNode(item.sender, item.message);
+          const node = createMessageNode(item.sender, item.message, item.index);
           chatSpace.appendChild(node);
         });
         firstIndex = data[0].index;
@@ -152,19 +146,21 @@
     }
   }
 
-  // 실시간 새 메시지 감지
   async function pollNewMessages() {
-    if (!GAS_URL || GAS_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") return;
+    if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
     
     try {
       const res = await fetch(`${GAS_URL}?mode=poll&lastIndex=${lastIndex}`);
       const data = await res.json();
       
-      if (data && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         data.forEach(item => {
-          const node = createMessageNode(item.sender, item.message);
-          chatSpace.appendChild(node);
-          lastIndex = item.index; // 최신 인덱스 업데이트
+          // 중복 렌더링 방지 체크
+          if (!document.querySelector(`[data-index="${item.index}"]`)) {
+            const node = createMessageNode(item.sender, item.message, item.index);
+            chatSpace.appendChild(node);
+            lastIndex = item.index;
+          }
         });
         scrollToBottom();
       }
@@ -173,7 +169,6 @@
     }
   }
 
-  // 스크롤 상단 이전 대화 로드
   async function loadMoreHistory() {
     if (isLoadingMore || !hasMoreHistory || firstIndex <= 1) return;
     isLoadingMore = true;
@@ -185,11 +180,13 @@
       const res = await fetch(`${GAS_URL}?mode=more&beforeIndex=${firstIndex}&limit=${limit}`);
       const data = await res.json();
 
-      if (data && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         const fragment = document.createDocumentFragment();
         data.forEach(item => {
-          const node = createMessageNode(item.sender, item.message);
-          fragment.appendChild(node);
+          if (!document.querySelector(`[data-index="${item.index}"]`)) {
+            const node = createMessageNode(item.sender, item.message, item.index);
+            fragment.appendChild(node);
+          }
         });
         
         chatSpace.insertBefore(fragment, chatSpace.firstChild);
@@ -209,25 +206,26 @@
     }
   }
 
-  // 메시지 전송 (화면 자가 생성 제거 ➔ 시트 전송 후 pollNewMessages로 단일화하여 중복 방지)
   async function sendMsg() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || isSending) return;
 
+    isSending = true; // 연속 클릭 방지
     input.value = '';
     input.focus();
 
-    if (GAS_URL && GAS_URL !== "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
+    if (GAS_URL && !GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
       try {
         await fetch(GAS_URL, {
           method: 'POST',
           body: JSON.stringify({ sender: currentUser, message: text })
         });
-        // 전송 완료 후 백엔드 데이터를 가져오면서 인덱스를 정확히 일치시킴
-        setTimeout(pollNewMessages, 300); 
+        await pollNewMessages(); // 전송 직후 즉시 새 동기화
       } catch(e) {
         console.error("전송 실패:", e);
+      } finally {
+        isSending = false;
       }
     }
   }
