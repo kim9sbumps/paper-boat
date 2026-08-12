@@ -39,7 +39,7 @@
       font-size: 16px;
       line-height: 20px;
       word-break: break-all;
-      animation: fadeIn 0.4s ease-in-out;
+      animation: fadeIn 0.3s ease-in-out;
     }
 
     .my-msg { text-align: right; margin-left: 25%; }
@@ -82,36 +82,40 @@
   </div>
 </div>
 
-<script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbz-ZqrpYsX-17wZiBXRVxiO2utYBpt5ybm-RvY4_Nnz2qJc9b4csxuc5VPMffA8BPI0/exec";
-  
+<!-- Firebase SDK 모듈 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+  // ★ 방금 주우신 firebaseConfig 코드를 여기에 통째로 붙여넣어 주세요!
+  const firebaseConfig = {
+    apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
+    authDomain: "paper-boat-695f8.firebaseapp.com",
+    databaseURL: "https://paper-boat-695f8-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "paper-boat-695f8",
+    storageBucket: "paper-boat-695f8.firebasestorage.app",
+    messagingSenderId: "500229195135",
+    appId: "1:500229195135:web:cdb336f8acdcbe662b064a"
+  };
+
+  // Firebase 및 Realtime Database 초기화
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const messagesRef = ref(db, 'messages');
+
   const urlParams = new URLSearchParams(window.location.search);
   const rawUser = urlParams.get('user') || '김솔음';
   const currentUser = decodeURIComponent(rawUser);
 
-  let firstIndex = 0; 
-  let lastIndex = 0;  
-  let pollTimer = null;
-  let isLoadingMore = false; 
-  let hasMoreHistory = true; 
-  let isSending = false;
-
   const chatSpace = document.getElementById('chatSpace');
 
-  function calcDynamicLimit() {
-    const containerHeight = chatSpace.clientHeight || window.innerHeight;
-    const estimatedMsgHeight = 45;
-    const neededCount = Math.ceil(containerHeight / estimatedMsgHeight) + 3;
-    return Math.max(5, neededCount);
-  }
-
-  function createMessageNode(sender, message, index) {
+  function createMessageNode(sender, message, key) {
     const line = document.createElement('div');
     const alignClass = (sender === currentUser) ? 'my-msg' : 'other-msg';
     const colorClass = (sender === '김솔음') ? 'color-soleum' : 'color-saheon';
     
     line.className = `note-line ${alignClass} ${colorClass}`;
-    if (index) line.setAttribute('data-index', index);
+    if (key) line.setAttribute('data-key', key);
     line.innerText = message;
     return line;
   }
@@ -120,165 +124,35 @@
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  // 초기 메시지 불러오기
-  async function initMessages() {
-    if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
-    
-    const limit = calcDynamicLimit();
-    
-    try {
-      const res = await fetch(`${GAS_URL}?mode=init&limit=${limit}`);
-      const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        chatSpace.innerHTML = '';
-        data.forEach(item => {
-          const node = createMessageNode(item.sender, item.message, item.index);
-          chatSpace.appendChild(node);
-          // 읽어온 메시지 중 가장 마지막 번호로 인덱스 갱신
-          if (item.index > lastIndex) lastIndex = item.index;
-        });
-        firstIndex = data[0].index;
-        
-        if (firstIndex <= 1) hasMoreHistory = false;
-        scrollToBottom();
-      }
-    } catch(e) {
-      console.error("초기 로드 오류:", e);
+  // 최근 100개 메시지 실시간 구독 (접속 시 즉시 표시 + 새 메시지 0.1초 반응)
+  const recentMessagesQuery = query(messagesRef, limitToLast(100));
+
+  onChildAdded(recentMessagesQuery, (snapshot) => {
+    const data = snapshot.val();
+    const key = snapshot.key;
+
+    if (!document.querySelector(`[data-key="${key}"]`)) {
+      const node = createMessageNode(data.sender, data.message, key);
+      chatSpace.appendChild(node);
+      scrollToBottom();
     }
-  }
-
-  // 실시간 동기화 (핵심: 수신 성공 시 lastIndex 무조건 갱신)
-  async function pollNewMessages() {
-    if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
-    
-    try {
-      const res = await fetch(`${GAS_URL}?mode=poll&lastIndex=${lastIndex}`);
-      const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        data.forEach(item => {
-          // DOM에 없는 경우에만 화면 추가
-          if (!document.querySelector(`[data-index="${item.index}"]`)) {
-            const node = createMessageNode(item.sender, item.message, item.index);
-            chatSpace.appendChild(node);
-          }
-          // 무조건 lastIndex를 가장 최신 메시지 인덱스로 끌어올림
-          if (item.index > lastIndex) {
-            lastIndex = item.index;
-          }
-        });
-        scrollToBottom();
-      }
-    } catch(e) {
-      console.error("실시간 동기화 오류:", e);
-    }
-  }
-
-  // 상단 스크롤 시 이전 대화 로드
-  async function loadMoreHistory() {
-    if (isLoadingMore || !hasMoreHistory || firstIndex <= 1) return;
-    isLoadingMore = true;
-
-    const previousScrollHeight = chatSpace.scrollHeight;
-    const limit = calcDynamicLimit();
-
-    try {
-      const res = await fetch(`${GAS_URL}?mode=more&beforeIndex=${firstIndex}&limit=${limit}`);
-      const data = await res.json();
-
-      if (Array.isArray(data) && data.length > 0) {
-        const fragment = document.createDocumentFragment();
-        data.forEach(item => {
-          if (!document.querySelector(`[data-index="${item.index}"]`)) {
-            const node = createMessageNode(item.sender, item.message, item.index);
-            fragment.appendChild(node);
-          }
-        });
-        
-        chatSpace.insertBefore(fragment, chatSpace.firstChild);
-        firstIndex = data[0].index;
-
-        const newScrollHeight = chatSpace.scrollHeight;
-        chatSpace.scrollTop = newScrollHeight - previousScrollHeight;
-
-        if (firstIndex <= 1) hasMoreHistory = false;
-      } else {
-        hasMoreHistory = false;
-      }
-    } catch(e) {
-      console.error("이전 대화 로드 오류:", e);
-    } finally {
-      isLoadingMore = false;
-    }
-  }
+  });
 
   // 메시지 전송
-  async function sendMsg() {
+  window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
-    if (!text || isSending) return;
+    if (!text) return;
 
-    isSending = true;
     input.value = '';
     input.focus();
 
-    if (GAS_URL && !GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
-      try {
-        await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify({ sender: currentUser, message: text })
-        });
-        
-        // 전송 성공 후 0.4초 뒤 동기화 (구글 시트 기록 반영 시간 고려)
-        setTimeout(async () => {
-          await pollNewMessages();
-          isSending = false;
-        }, 400);
-      } catch(e) {
-        console.error("전송 실패:", e);
-        isSending = false;
-      }
-    }
-  }
-
-  function startPolling() {
-    if (!pollTimer) {
-      pollNewMessages();
-      pollTimer = setInterval(pollNewMessages, 3000);
-    }
-  }
-
-  function stopPolling() {
-    if (pollTimer) {
-      clearInterval(pollTimer);
-      pollTimer = null;
-    }
-  }
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopPolling();
-    else startPolling();
-  });
-
-  chatSpace.addEventListener('scroll', () => {
-    if (chatSpace.scrollTop <= 30) {
-      loadMoreHistory();
-    }
-  });
-
-  chatSpace.addEventListener('wheel', (e) => {
-    if (chatSpace.scrollTop === 0 && e.deltaY < 0) {
-      loadMoreHistory();
-    }
-  });
-
-  async function init() {
-    await initMessages();
-    startPolling();
-  }
-
-  init();
+    push(messagesRef, {
+      sender: currentUser,
+      message: text,
+      timestamp: Date.now()
+    });
+  };
 </script>
 
 </body>
