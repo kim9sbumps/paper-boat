@@ -94,7 +94,7 @@
   let pollTimer = null;
   let isLoadingMore = false; 
   let hasMoreHistory = true; 
-  let isSending = false; // 중복 전송 방지 플래그
+  let isSending = false;
 
   const chatSpace = document.getElementById('chatSpace');
 
@@ -120,6 +120,7 @@
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
+  // 초기 메시지 불러오기
   async function initMessages() {
     if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
     
@@ -134,9 +135,10 @@
         data.forEach(item => {
           const node = createMessageNode(item.sender, item.message, item.index);
           chatSpace.appendChild(node);
+          // 읽어온 메시지 중 가장 마지막 번호로 인덱스 갱신
+          if (item.index > lastIndex) lastIndex = item.index;
         });
         firstIndex = data[0].index;
-        lastIndex = data[data.length - 1].index;
         
         if (firstIndex <= 1) hasMoreHistory = false;
         scrollToBottom();
@@ -146,6 +148,7 @@
     }
   }
 
+  // 실시간 동기화 (핵심: 수신 성공 시 lastIndex 무조건 갱신)
   async function pollNewMessages() {
     if (!GAS_URL || GAS_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) return;
     
@@ -155,10 +158,13 @@
       
       if (Array.isArray(data) && data.length > 0) {
         data.forEach(item => {
-          // 중복 렌더링 방지 체크
+          // DOM에 없는 경우에만 화면 추가
           if (!document.querySelector(`[data-index="${item.index}"]`)) {
             const node = createMessageNode(item.sender, item.message, item.index);
             chatSpace.appendChild(node);
+          }
+          // 무조건 lastIndex를 가장 최신 메시지 인덱스로 끌어올림
+          if (item.index > lastIndex) {
             lastIndex = item.index;
           }
         });
@@ -169,6 +175,7 @@
     }
   }
 
+  // 상단 스크롤 시 이전 대화 로드
   async function loadMoreHistory() {
     if (isLoadingMore || !hasMoreHistory || firstIndex <= 1) return;
     isLoadingMore = true;
@@ -206,12 +213,13 @@
     }
   }
 
+  // 메시지 전송
   async function sendMsg() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text || isSending) return;
 
-    isSending = true; // 연속 클릭 방지
+    isSending = true;
     input.value = '';
     input.focus();
 
@@ -221,10 +229,14 @@
           method: 'POST',
           body: JSON.stringify({ sender: currentUser, message: text })
         });
-        await pollNewMessages(); // 전송 직후 즉시 새 동기화
+        
+        // 전송 성공 후 0.4초 뒤 동기화 (구글 시트 기록 반영 시간 고려)
+        setTimeout(async () => {
+          await pollNewMessages();
+          isSending = false;
+        }, 400);
       } catch(e) {
         console.error("전송 실패:", e);
-      } finally {
         isSending = false;
       }
     }
