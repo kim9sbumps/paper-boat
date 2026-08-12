@@ -45,8 +45,8 @@
     .my-msg { text-align: right; margin-left: 25%; }
     .other-msg { text-align: left; margin-right: 25%; }
 
-    .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
-    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
+    .color-soleum { color: #800000; } /* 김솔음: 버건디 */
+    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 */
 
     .input-box {
       padding: 16px 20px;
@@ -77,17 +77,17 @@
 <div class="paper-container">
   <div class="chat-space" id="chatSpace"></div>
   <div class="input-box">
-    <input type="text" id="msgInput" placeholder="종이배에 메시지를 남겨 보세요." onkeypress="if(event.key==='Enter') sendMsg()">
+    <input type="text" id="msgInput" placeholder="종이배에 메시지를 남겨 보세요." onkeyup="if(event.key==='Enter') sendMsg()">
     <button onclick="sendMsg()">전송</button>
   </div>
 </div>
 
-<!-- Firebase SDK 모듈 -->
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+  import { getDatabase, ref, push, onChildAdded, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  // ★ 방금 주우신 firebaseConfig 코드를 여기에 통째로 붙여넣어 주세요!
+  // firebaseConfig
   const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
     authDomain: "paper-boat-695f8.firebaseapp.com",
@@ -98,7 +98,6 @@
     appId: "1:500229195135:web:cdb336f8acdcbe662b064a"
   };
 
-  // Firebase 및 Realtime Database 초기화
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const messagesRef = ref(db, 'messages');
@@ -124,33 +123,37 @@
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  // 최근 100개 메시지 실시간 구독 (접속 시 즉시 표시 + 새 메시지 0.1초 반응)
-  const recentMessagesQuery = query(messagesRef, limitToLast(100));
+  // 데이터 구독
+  const recentMessagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(200));
 
   onChildAdded(recentMessagesQuery, (snapshot) => {
     const data = snapshot.val();
     const key = snapshot.key;
 
-    if (!document.querySelector(`[data-key="${key}"]`)) {
+    if (data && data.message && !document.querySelector(`[data-key="${key}"]`)) {
       const node = createMessageNode(data.sender, data.message, key);
       chatSpace.appendChild(node);
       scrollToBottom();
     }
   });
 
-  // 메시지 전송
+  // 전송 함수를 window 객체에 등록
   window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text) return;
 
     input.value = '';
-    input.focus();
 
     push(messagesRef, {
       sender: currentUser,
       message: text,
       timestamp: Date.now()
+    }).then(() => {
+      input.focus();
+    }).catch((error) => {
+      console.error("Firebase 전송 실패:", error);
+      alert("메시지 전송에 실패했습니다. 콘솔을 확인해 주세요.");
     });
   };
 </script>
