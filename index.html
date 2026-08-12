@@ -7,67 +7,134 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      background-color: #e5e0d8;
+      background-color: #e2ddd5;
       font-family: 'Gowun Batang', serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      color: #2c2520;
     }
+
     .paper-container {
       width: 100%;
-      max-width: 480px;
+      max-width: 460px;
       height: 100vh;
-      background: #faf7f0;
+      max-height: 840px;
+      background: #faf7f2;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
     }
+
+    @media (min-width: 480px) {
+      .paper-container {
+        height: 92vh;
+        border-radius: 8px;
+      }
+    }
+
+    /* 대화 영역 (여백 확보) */
     .chat-space {
       flex: 1;
-      padding: 24px 20px;
+      padding: 30px 24px 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
+      scroll-behavior: smooth;
     }
-    .chat-space > .note-line:first-child {
-      margin-top: auto;
+    
+    .chat-space::-webkit-scrollbar {
+      width: 4px;
     }
-    .note-line {
-      font-size: 16px;
-      line-height: 20px;
-      word-break: break-all;
-      animation: fadeIn 0.3s ease-in-out;
+    .chat-space::-webkit-scrollbar-thumb {
+      background: #e3ddd3;
+      border-radius: 2px;
     }
 
-    .my-msg { text-align: right; margin-left: 25%; }
-    .other-msg { text-align: left; margin-right: 25%; }
-
-    .color-soleum { color: #800000; } /* 김솔음: 버건디 */
-    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 */
-
-    .input-box {
-      padding: 16px 20px;
-      background: #faf7f0;
-      border-top: 1px solid #e3ddd3;
+    /* 메시지 래퍼 */
+    .msg-wrapper {
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      max-width: 82%;
+      animation: fadeIn 0.35s ease-in-out;
+    }
+    
+    /* 발신자별 정렬 */
+    .my-msg {
+      align-self: flex-end;
+      align-items: flex-end;
+      text-align: right;
+    }
+    .other-msg {
+      align-self: flex-start;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    /* 텍스트 본문 (말풍선/배경 없음) */
+    .note-line {
+      font-size: 15px;
+      line-height: 1.65;
+      word-break: break-all;
+    }
+
+    /* 잉크 칼라 */
+    .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
+    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
+
+    /* 타임스탬프 (메시지 정렬에 맞춰 나란히 배치) */
+    .msg-time {
+      font-size: 11px;
+      color: #a59b91;
+      margin-top: 4px;
+    }
+
+    /* 하단 연필선 입력 영역 */
+    .input-box {
+      padding: 16px 20px 22px;
+      background: #faf7f2;
+      border-top: 1px solid #e8e2d7;
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
     input[type="text"] {
-      flex: 1; border: none; background: transparent;
-      border-bottom: 1px solid #8c7b6c;
+      flex: 1;
+      border: none;
+      background: transparent;
+      border-bottom: 1px solid #a89a8b;
       font-family: 'Gowun Batang', serif;
-      font-size: 15px; padding: 6px 4px; outline: none; color: #2c2520;
+      font-size: 14px;
+      padding: 8px 4px;
+      outline: none;
+      color: #2c2520;
+    }
+    input[type="text"]::placeholder {
+      color: #b0a59a;
     }
     button {
-      background: #8c7b6c; color: #fff; border: none;
-      padding: 6px 16px; font-family: 'Gowun Batang', serif;
-      font-size: 14px; cursor: pointer; border-radius: 2px;
+      background: #8c7b6c;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      font-family: 'Gowun Batang', serif;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.2s;
     }
+    button:hover {
+      background: #786a5c;
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
@@ -87,7 +154,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
   import { getDatabase, ref, push, onChildAdded, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  // firebaseConfig
   const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
     authDomain: "paper-boat-695f8.firebaseapp.com",
@@ -108,22 +174,44 @@
 
   const chatSpace = document.getElementById('chatSpace');
 
-  function createMessageNode(sender, message, key) {
-    const line = document.createElement('div');
-    const alignClass = (sender === currentUser) ? 'my-msg' : 'other-msg';
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? '오후' : '오전';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${ampm} ${hours}:${minutes}`;
+  }
+
+  function createMessageNode(sender, message, timestamp, key) {
+    const wrapper = document.createElement('div');
+    const isMyMsg = (sender === currentUser);
+    const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
     const colorClass = (sender === '김솔음') ? 'color-soleum' : 'color-saheon';
-    
-    line.className = `note-line ${alignClass} ${colorClass}`;
-    if (key) line.setAttribute('data-key', key);
+
+    wrapper.className = `msg-wrapper ${alignClass}`;
+    if (key) wrapper.setAttribute('data-key', key);
+
+    const line = document.createElement('div');
+    line.className = `note-line ${colorClass}`;
     line.innerText = message;
-    return line;
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'msg-time';
+    timeDiv.innerText = formatTime(timestamp);
+
+    wrapper.appendChild(line);
+    wrapper.appendChild(timeDiv);
+
+    return wrapper;
   }
 
   function scrollToBottom() {
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  // 데이터 구독
   const recentMessagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(200));
 
   onChildAdded(recentMessagesQuery, (snapshot) => {
@@ -131,13 +219,12 @@
     const key = snapshot.key;
 
     if (data && data.message && !document.querySelector(`[data-key="${key}"]`)) {
-      const node = createMessageNode(data.sender, data.message, key);
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key);
       chatSpace.appendChild(node);
       scrollToBottom();
     }
   });
 
-  // 전송 함수를 window 객체에 등록
   window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
@@ -153,7 +240,6 @@
       input.focus();
     }).catch((error) => {
       console.error("Firebase 전송 실패:", error);
-      alert("메시지 전송에 실패했습니다. 콘솔을 확인해 주세요.");
     });
   };
 </script>
