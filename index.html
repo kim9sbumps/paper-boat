@@ -39,15 +39,14 @@
       }
     }
 
-    /* 대화 영역 (여백 확보) */
+    /* 대화 영역 */
     .chat-space {
       flex: 1;
-      padding: 30px 24px 16px;
+      padding: 36px 24px 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      scroll-behavior: smooth;
     }
     
     .chat-space::-webkit-scrollbar {
@@ -63,7 +62,7 @@
       display: flex;
       flex-direction: column;
       max-width: 82%;
-      animation: fadeIn 0.35s ease-in-out;
+      animation: fadeIn 0.3s ease-in-out;
     }
     
     /* 발신자별 정렬 */
@@ -78,7 +77,7 @@
       text-align: left;
     }
 
-    /* 텍스트 본문 (말풍선/배경 없음) */
+    /* 텍스트 본문 */
     .note-line {
       font-size: 15px;
       line-height: 1.65;
@@ -89,7 +88,7 @@
     .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
     .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
 
-    /* 타임스탬프 (메시지 정렬에 맞춰 나란히 배치) */
+    /* 타임스탬프 */
     .msg-time {
       font-size: 11px;
       color: #a59b91;
@@ -135,7 +134,7 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
+      from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
@@ -153,7 +152,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+  import { getDatabase, ref, push, onChildAdded, query, orderByChild, limitToLast, endBefore, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
@@ -174,6 +173,20 @@
   const currentUser = decodeURIComponent(rawUser);
 
   const chatSpace = document.getElementById('chatSpace');
+
+  // 화면 높이에 맞춰 초기 및 스크롤 페이징 개수 유동적 계산 (개당 약 50px 간격)
+  function calculateDynamicPageSize() {
+    const spaceHeight = chatSpace.clientHeight || window.innerHeight;
+    const estimatedMsgHeight = 55; // 메시지 1개당 평균 높이 (여백/타임스탬프 포함)
+    const calculated = Math.ceil(spaceHeight / estimatedMsgHeight) + 3; // 여유분 3개
+    return Math.max(12, Math.min(calculated, 35)); // 최소 12개 ~ 최대 35개 범위 지정
+  }
+
+  const PAGE_SIZE = calculateDynamicPageSize();
+  let oldestTimestamp = null;
+  let isLoadingMore = false;
+  let hasMoreHistory = true;
+  let isInitialLoad = true;
 
   function formatTime(timestamp) {
     if (!timestamp) return '';
@@ -213,19 +226,89 @@
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  const recentMessagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(200));
+  // 상단 스크롤 시 과거 과거 대화 불러오기
+  async function loadMoreHistory() {
+    if (isLoadingMore || !hasMoreHistory || !oldestTimestamp) return;
+    isLoadingMore = true;
 
-  onChildAdded(recentMessagesQuery, (snapshot) => {
+    const previousScrollHeight = chatSpace.scrollHeight;
+
+    const historyQuery = query(
+      messagesRef,
+      orderByChild('timestamp'),
+      endBefore(oldestTimestamp),
+      limitToLast(PAGE_SIZE)
+    );
+
+    try {
+      const snapshot = await get(historyQuery);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+
+        if (keys.length < PAGE_SIZE) {
+          hasMoreHistory = false;
+        }
+
+        keys.forEach((key) => {
+          const msg = data[key];
+          if (!document.querySelector(`[data-key="${key}"]`)) {
+            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key);
+            chatSpace.insertBefore(node, chatSpace.firstChild);
+            oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
+          }
+        });
+
+        // 위치 보정
+        chatSpace.scrollTop = chatSpace.scrollHeight - previousScrollHeight;
+      } else {
+        hasMoreHistory = false;
+      }
+    } catch (e) {
+      console.error("과거 메시지 불러오기 실패:", e);
+    } finally {
+      isLoadingMore = false;
+    }
+  }
+
+  // 유동적 개수 적용 초기 쿼리 실행
+  const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
+
+  onChildAdded(initialQuery, (snapshot) => {
     const data = snapshot.val();
     const key = snapshot.key;
 
     if (data && data.message && !document.querySelector(`[data-key="${key}"]`)) {
       const node = createMessageNode(data.sender, data.message, data.timestamp, key);
       chatSpace.appendChild(node);
-      scrollToBottom();
+
+      if (!oldestTimestamp || data.timestamp < oldestTimestamp) {
+        oldestTimestamp = data.timestamp;
+      }
+
+      if (isInitialLoad) {
+        scrollToBottom();
+      } else {
+        if (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight < 120) {
+          scrollToBottom();
+        }
+      }
     }
   });
 
+  setTimeout(() => {
+    isInitialLoad = false;
+    scrollToBottom();
+  }, 300);
+
+  // 상단 스크롤 도달 이벤트
+  chatSpace.addEventListener('scroll', () => {
+    if (chatSpace.scrollTop <= 40) {
+      loadMoreHistory();
+    }
+  });
+
+  // 전송 함수
   window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
@@ -239,6 +322,7 @@
       timestamp: Date.now()
     }).then(() => {
       input.focus();
+      scrollToBottom();
     }).catch((error) => {
       console.error("Firebase 전송 실패:", error);
     });
