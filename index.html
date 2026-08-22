@@ -46,7 +46,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
     
     .chat-space::-webkit-scrollbar {
@@ -57,12 +57,17 @@
       border-radius: 2px;
     }
 
-    /* 메시지 래퍼 */
+    /* 메시지 래퍼 및 연속 메시지 간격 최적화 */
     .msg-wrapper {
       display: flex;
       flex-direction: column;
       max-width: 82%;
+      position: relative;
       animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .msg-wrapper.is-consecutive {
+      margin-top: -8px;
     }
     
     /* 발신자별 정렬 */
@@ -88,11 +93,49 @@
     .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
     .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
 
-    /* 타임스탬프 */
+    /* 하단 메타 영역 (시간 & 액션 버튼) */
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .my-msg .msg-meta {
+      flex-direction: row-reverse;
+    }
+
     .msg-time {
       font-size: 11px;
       color: #a59b91;
-      margin-top: 4px;
+    }
+
+    /* 수정/삭제 액션 버튼 (호버 시 은은하게 노출) */
+    .msg-actions {
+      display: none;
+      gap: 5px;
+      font-size: 10px;
+      color: #b5a99d;
+    }
+
+    .msg-wrapper:hover .msg-actions,
+    .msg-wrapper:active .msg-actions {
+      display: inline-flex;
+    }
+
+    .action-btn {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: 'Gowun Batang', serif;
+      font-size: 10px;
+      color: #9e9083;
+      padding: 0 1px;
+      transition: color 0.15s;
+    }
+    .action-btn:hover {
+      color: #4a3e35;
+      text-decoration: underline;
     }
 
     /* 하단 연필선 입력 영역 */
@@ -118,7 +161,7 @@
     input[type="text"]::placeholder {
       color: #b0a59a;
     }
-    button {
+    button#sendBtn {
       background: #8c7b6c;
       color: #fff;
       border: none;
@@ -129,8 +172,12 @@
       border-radius: 3px;
       transition: background 0.2s;
     }
-    button:hover {
+    button#sendBtn:hover {
       background: #786a5c;
+    }
+    button#sendBtn:disabled {
+      background: #c2b8ad;
+      cursor: not-allowed;
     }
 
     @keyframes fadeIn {
@@ -145,14 +192,28 @@
   <div class="chat-space" id="chatSpace"></div>
   <div class="input-box">
     <input type="text" id="msgInput" placeholder="종이배에 메시지를 남겨 보세요." onkeyup="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()">전송</button>
+    <button id="sendBtn" onclick="sendMsg()">전송</button>
   </div>
 </div>
 
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, query, orderByChild, limitToLast, endBefore, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+  import { 
+    getDatabase, 
+    ref, 
+    push, 
+    onChildAdded, 
+    onChildChanged, 
+    onChildRemoved, 
+    query, 
+    orderByChild, 
+    limitToLast, 
+    endBefore, 
+    get, 
+    update, 
+    remove 
+  } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
@@ -173,13 +234,12 @@
   const currentUser = decodeURIComponent(rawUser);
 
   const chatSpace = document.getElementById('chatSpace');
+  const sendBtn = document.getElementById('sendBtn');
 
-  // 화면 높이에 맞춰 초기 및 스크롤 페이징 개수 유동적 계산 (개당 약 50px 간격)
   function calculateDynamicPageSize() {
     const spaceHeight = chatSpace.clientHeight || window.innerHeight;
-    const estimatedMsgHeight = 55; // 메시지 1개당 평균 높이 (여백/타임스탬프 포함)
-    const calculated = Math.ceil(spaceHeight / estimatedMsgHeight) + 3; // 여유분 3개
-    return Math.max(12, Math.min(calculated, 35)); // 최소 12개 ~ 최대 35개 범위 지정
+    const calculated = Math.ceil(spaceHeight / 55) + 3;
+    return Math.max(12, Math.min(calculated, 35));
   }
 
   const PAGE_SIZE = calculateDynamicPageSize();
@@ -187,6 +247,8 @@
   let isLoadingMore = false;
   let hasMoreHistory = true;
   let isInitialLoad = true;
+  let lastSender = null;
+  let lastTimeStr = null;
 
   function formatTime(timestamp) {
     if (!timestamp) return '';
@@ -199,34 +261,116 @@
     return `${ampm} ${hours}:${minutes}`;
   }
 
-  function createMessageNode(sender, message, timestamp, key) {
+  // 메시지 엘리먼트 생성
+  function createMessageNode(sender, message, timestamp, key, isConsecutive = false) {
     const wrapper = document.createElement('div');
     const isMyMsg = (sender === currentUser);
     const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
     const colorClass = (sender === '김솔음') ? 'color-soleum' : 'color-saheon';
 
-    wrapper.className = `msg-wrapper ${alignClass}`;
+    wrapper.className = `msg-wrapper ${alignClass} ${isConsecutive ? 'is-consecutive' : ''}`;
     if (key) wrapper.setAttribute('data-key', key);
+    wrapper.setAttribute('data-sender', sender);
+    wrapper.setAttribute('data-time', formatTime(timestamp));
 
     const line = document.createElement('div');
     line.className = `note-line ${colorClass}`;
     line.innerText = message;
 
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'msg-meta';
+
     const timeDiv = document.createElement('div');
     timeDiv.className = 'msg-time';
     timeDiv.innerText = formatTime(timestamp);
+    metaDiv.appendChild(timeDiv);
+
+    // 내가 보낸 메시지인 경우에만 수정/삭제 버튼 추가
+    if (isMyMsg && key) {
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'msg-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'action-btn';
+      editBtn.innerText = '수정';
+      editBtn.onclick = () => editMessage(key, line.innerText);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn';
+      delBtn.innerText = '삭제';
+      delBtn.onclick = () => deleteMessage(key);
+
+      actionsDiv.appendChild(editBtn);
+      actionsDiv.appendChild(document.createTextNode('·'));
+      actionsDiv.appendChild(delBtn);
+
+      metaDiv.appendChild(actionsDiv);
+    }
 
     wrapper.appendChild(line);
-    wrapper.appendChild(timeDiv);
+    wrapper.appendChild(metaDiv);
 
     return wrapper;
+  }
+
+  // 메시지 수정 함수
+  window.editMessage = function(key, currentText) {
+    const newText = prompt('메시지를 수정하세요:', currentText);
+    if (newText === null) return;
+    const trimmed = newText.trim();
+    if (!trimmed) {
+      alert('내용을 입력해 주세요.');
+      return;
+    }
+    const targetRef = ref(db, `messages/${key}`);
+    update(targetRef, { message: trimmed }).catch((err) => {
+      console.error("수정 실패:", err);
+      alert("수정에 실패했습니다.");
+    });
+  };
+
+  // 메시지 삭제 함수
+  window.deleteMessage = function(key) {
+    if (!confirm('이 메시지를 지울까요?')) return;
+    const targetRef = ref(db, `messages/${key}`);
+    remove(targetRef).catch((err) => {
+      console.error("삭제 실패:", err);
+      alert("삭제에 실패했습니다.");
+    });
+  };
+
+  // 연속 메시지 타임스탬프 정리
+  function reprocessConsecutiveTimestamps() {
+    const wrappers = chatSpace.querySelectorAll('.msg-wrapper');
+    for (let i = 0; i < wrappers.length; i++) {
+      const current = wrappers[i];
+      const next = wrappers[i + 1];
+
+      const timeNode = current.querySelector('.msg-time');
+      if (!timeNode) continue;
+
+      if (next) {
+        const curSender = current.getAttribute('data-sender');
+        const nextSender = next.getAttribute('data-sender');
+        const curTime = current.getAttribute('data-time');
+        const nextTime = next.getAttribute('data-time');
+
+        if (curSender === nextSender && curTime === nextTime) {
+          timeNode.style.display = 'none';
+        } else {
+          timeNode.style.display = 'block';
+        }
+      } else {
+        timeNode.style.display = 'block';
+      }
+    }
   }
 
   function scrollToBottom() {
     chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
-  // 상단 스크롤 시 과거 과거 대화 불러오기
+  // 상단 과거 대화 불러오기
   async function loadMoreHistory() {
     if (isLoadingMore || !hasMoreHistory || !oldestTimestamp) return;
     isLoadingMore = true;
@@ -259,7 +403,7 @@
           }
         });
 
-        // 위치 보정
+        reprocessConsecutiveTimestamps();
         chatSpace.scrollTop = chatSpace.scrollHeight - previousScrollHeight;
       } else {
         hasMoreHistory = false;
@@ -271,7 +415,7 @@
     }
   }
 
-  // 유동적 개수 적용 초기 쿼리 실행
+  // 실시간 메시지 추가 감지
   const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
 
   onChildAdded(initialQuery, (snapshot) => {
@@ -279,12 +423,20 @@
     const key = snapshot.key;
 
     if (data && data.message && !document.querySelector(`[data-key="${key}"]`)) {
-      const node = createMessageNode(data.sender, data.message, data.timestamp, key);
+      const timeStr = formatTime(data.timestamp);
+      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr);
+
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key, isConsecutive);
       chatSpace.appendChild(node);
+
+      lastSender = data.sender;
+      lastTimeStr = timeStr;
 
       if (!oldestTimestamp || data.timestamp < oldestTimestamp) {
         oldestTimestamp = data.timestamp;
       }
+
+      reprocessConsecutiveTimestamps();
 
       if (isInitialLoad) {
         scrollToBottom();
@@ -296,12 +448,32 @@
     }
   });
 
+  // 실시간 수정 감지 (상대방/내가 수정한 내용 즉시 반영)
+  onChildChanged(messagesRef, (snapshot) => {
+    const key = snapshot.key;
+    const data = snapshot.val();
+    const el = document.querySelector(`[data-key="${key}"]`);
+    if (el && data && data.message) {
+      const line = el.querySelector('.note-line');
+      if (line) line.innerText = data.message;
+    }
+  });
+
+  // 실시간 삭제 감지 (상대방/내가 삭제한 메시지 즉시 화면 제거)
+  onChildRemoved(messagesRef, (snapshot) => {
+    const key = snapshot.key;
+    const el = document.querySelector(`[data-key="${key}"]`);
+    if (el) {
+      el.remove();
+      reprocessConsecutiveTimestamps();
+    }
+  });
+
   setTimeout(() => {
     isInitialLoad = false;
     scrollToBottom();
   }, 300);
 
-  // 상단 스크롤 도달 이벤트
   chatSpace.addEventListener('scroll', () => {
     if (chatSpace.scrollTop <= 40) {
       loadMoreHistory();
@@ -315,6 +487,7 @@
     if (!text) return;
 
     input.value = '';
+    sendBtn.disabled = true;
 
     push(messagesRef, {
       sender: currentUser,
@@ -325,6 +498,8 @@
       scrollToBottom();
     }).catch((error) => {
       console.error("Firebase 전송 실패:", error);
+    }).finally(() => {
+      sendBtn.disabled = false;
     });
   };
 </script>
