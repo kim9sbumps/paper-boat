@@ -57,7 +57,7 @@
       border-radius: 2px;
     }
 
-    /* 메시지 래퍼 및 연속 메시지 간격 최적화 */
+    /* 메시지 래퍼 */
     .msg-wrapper {
       display: flex;
       flex-direction: column;
@@ -89,40 +89,59 @@
       word-break: break-all;
     }
 
-    /* 잉크 칼라 */
-    .color-soleum { color: #800000; } /* 김솔음: 버건디 잉크 */
-    .color-saheon { color: #386b2c; } /* 백사헌: 올리브 그린 잉크 */
+    /* 첨부 사진 (폴라로이드 스타일 프레임) */
+    .attached-photo-frame {
+      margin-top: 6px;
+      background: #ffffff;
+      padding: 5px;
+      border: 1px solid #e0d8ce;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.15s ease;
+    }
+    .attached-photo-frame:hover {
+      transform: scale(1.02);
+    }
+    .attached-img {
+      max-width: 200px;
+      max-height: 240px;
+      display: block;
+      border-radius: 2px;
+      object-fit: cover;
+    }
 
-    /* 하단 메타 영역 (시간 & 액션 버튼) */
+    /* 잉크 칼라 */
+    .color-soleum { color: #800000; }
+    .color-saheon { color: #386b2c; }
+
+    /* 메타 영역 (시간 & 수정/삭제 버튼) */
     .msg-meta {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-top: 4px;
     }
-
     .my-msg .msg-meta {
       flex-direction: row-reverse;
     }
-
     .msg-time {
       font-size: 11px;
       color: #a59b91;
     }
 
-    /* 수정/삭제 액션 버튼 (호버 시 은은하게 노출) */
+    /* 수정/삭제 버튼 */
     .msg-actions {
       display: none;
       gap: 5px;
       font-size: 10px;
       color: #b5a99d;
     }
-
     .msg-wrapper:hover .msg-actions,
     .msg-wrapper:active .msg-actions {
       display: inline-flex;
     }
-
     .action-btn {
       cursor: pointer;
       border: none;
@@ -131,21 +150,68 @@
       font-size: 10px;
       color: #9e9083;
       padding: 0 1px;
-      transition: color 0.15s;
     }
     .action-btn:hover {
       color: #4a3e35;
       text-decoration: underline;
     }
 
+    /* 사진 첨부 미리보기 바 (입력창 상단) */
+    .attach-preview-bar {
+      display: none;
+      padding: 8px 20px;
+      background: #f4ede4;
+      border-top: 1px solid #e8e2d7;
+      align-items: center;
+      gap: 10px;
+    }
+    .preview-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid #d4c8bb;
+    }
+    .preview-info {
+      font-size: 12px;
+      color: #7a6e62;
+      flex: 1;
+    }
+    .cancel-attach-btn {
+      background: none;
+      border: none;
+      font-size: 14px;
+      color: #8c7b6c;
+      cursor: pointer;
+    }
+
     /* 하단 연필선 입력 영역 */
     .input-box {
-      padding: 16px 20px 22px;
+      padding: 14px 20px 20px;
       background: #faf7f2;
       border-top: 1px solid #e8e2d7;
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
+    }
+    .clip-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8c7b6c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .clip-btn:hover {
+      opacity: 1;
+    }
+    .clip-icon {
+      width: 20px;
+      height: 20px;
     }
     input[type="text"] {
       flex: 1;
@@ -180,6 +246,30 @@
       cursor: not-allowed;
     }
 
+    /* 사진 확대 모달(Lightbox) */
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(30, 26, 22, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+      backdrop-filter: blur(4px);
+    }
+    .image-modal img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      background: #faf7f2;
+      padding: 6px;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -190,10 +280,30 @@
 
 <div class="paper-container">
   <div class="chat-space" id="chatSpace"></div>
+
+  <!-- 사진 첨부 미리보기 바 -->
+  <div class="attach-preview-bar" id="previewBar">
+    <img id="previewImg" class="preview-thumb" src="" alt="미리보기">
+    <span class="preview-info">사진이 첨부되었습니다.</span>
+    <button class="cancel-attach-btn" onclick="clearAttachedImage()" title="첨부 취소">✕</button>
+  </div>
+
   <div class="input-box">
+    <!-- 숨겨진 파일 선택창 -->
+    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+    <button class="clip-btn" onclick="document.getElementById('fileInput').click()" title="사진 첨부">
+      <svg class="clip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+      </svg>
+    </button>
     <input type="text" id="msgInput" placeholder="종이배에 메시지를 남겨 보세요." onkeyup="if(event.key==='Enter') sendMsg()">
     <button id="sendBtn" onclick="sendMsg()">전송</button>
   </div>
+</div>
+
+<!-- 사진 전체화면 확대 라이트박스 -->
+<div class="image-modal" id="imageModal" onclick="closeImageModal()">
+  <img id="modalImg" src="" alt="확대된 사진">
 </div>
 
 <!-- Firebase SDK -->
@@ -235,10 +345,11 @@
 
   const chatSpace = document.getElementById('chatSpace');
   const sendBtn = document.getElementById('sendBtn');
+  let currentBase64Image = null;
 
   function calculateDynamicPageSize() {
     const spaceHeight = chatSpace.clientHeight || window.innerHeight;
-    const calculated = Math.ceil(spaceHeight / 55) + 3;
+    const calculated = Math.ceil(spaceHeight / 65) + 3;
     return Math.max(12, Math.min(calculated, 35));
   }
 
@@ -261,8 +372,8 @@
     return `${ampm} ${hours}:${minutes}`;
   }
 
-  // 메시지 엘리먼트 생성
-  function createMessageNode(sender, message, timestamp, key, isConsecutive = false) {
+  // 메시지 렌더링 노드 생성
+  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false) {
     const wrapper = document.createElement('div');
     const isMyMsg = (sender === currentUser);
     const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
@@ -273,9 +384,27 @@
     wrapper.setAttribute('data-sender', sender);
     wrapper.setAttribute('data-time', formatTime(timestamp));
 
-    const line = document.createElement('div');
-    line.className = `note-line ${colorClass}`;
-    line.innerText = message;
+    if (message) {
+      const line = document.createElement('div');
+      line.className = `note-line ${colorClass}`;
+      line.innerText = message;
+      wrapper.appendChild(line);
+    }
+
+    // 사진이 첨부된 경우 폴라로이드 프레임 생성
+    if (imageUrl) {
+      const frame = document.createElement('div');
+      frame.className = 'attached-photo-frame';
+      frame.onclick = () => openImageModal(imageUrl);
+
+      const img = document.createElement('img');
+      img.className = 'attached-img';
+      img.src = imageUrl;
+      img.alt = '첨부된 사진';
+
+      frame.appendChild(img);
+      wrapper.appendChild(frame);
+    }
 
     const metaDiv = document.createElement('div');
     metaDiv.className = 'msg-meta';
@@ -285,35 +414,90 @@
     timeDiv.innerText = formatTime(timestamp);
     metaDiv.appendChild(timeDiv);
 
-    // 내가 보낸 메시지인 경우에만 수정/삭제 버튼 추가
+    // 수정 및 삭제
     if (isMyMsg && key) {
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'msg-actions';
 
-      const editBtn = document.createElement('button');
-      editBtn.className = 'action-btn';
-      editBtn.innerText = '수정';
-      editBtn.onclick = () => editMessage(key, line.innerText);
+      if (message) {
+        const editBtn = document.createElement('button');
+        editBtn.className = 'action-btn';
+        editBtn.innerText = '수정';
+        editBtn.onclick = () => editMessage(key, message);
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(document.createTextNode('·'));
+      }
 
       const delBtn = document.createElement('button');
       delBtn.className = 'action-btn';
       delBtn.innerText = '삭제';
       delBtn.onclick = () => deleteMessage(key);
-
-      actionsDiv.appendChild(editBtn);
-      actionsDiv.appendChild(document.createTextNode('·'));
       actionsDiv.appendChild(delBtn);
 
       metaDiv.appendChild(actionsDiv);
     }
 
-    wrapper.appendChild(line);
     wrapper.appendChild(metaDiv);
-
     return wrapper;
   }
 
-  // 메시지 수정 함수
+  // 라이트박스 열기/닫기
+  window.openImageModal = function(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    modalImg.src = src;
+    modal.style.display = 'flex';
+  };
+
+  window.closeImageModal = function() {
+    document.getElementById('imageModal').style.display = 'none';
+  };
+
+  // 이미지 선택 및 클라이언트 경량 압축 (가로 최대 800px, JPEG 75%)
+  window.handleFileSelect = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 800;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        currentBase64Image = canvas.toDataURL('image/jpeg', 0.75);
+
+        // 미리보기 바 활성화
+        document.getElementById('previewImg').src = currentBase64Image;
+        document.getElementById('previewBar').style.display = 'flex';
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.clearAttachedImage = function() {
+    currentBase64Image = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('previewBar').style.display = 'none';
+  };
+
+  // 수정
   window.editMessage = function(key, currentText) {
     const newText = prompt('메시지를 수정하세요:', currentText);
     if (newText === null) return;
@@ -322,24 +506,15 @@
       alert('내용을 입력해 주세요.');
       return;
     }
-    const targetRef = ref(db, `messages/${key}`);
-    update(targetRef, { message: trimmed }).catch((err) => {
-      console.error("수정 실패:", err);
-      alert("수정에 실패했습니다.");
-    });
+    update(ref(db, `messages/${key}`), { message: trimmed });
   };
 
-  // 메시지 삭제 함수
+  // 삭제
   window.deleteMessage = function(key) {
     if (!confirm('이 메시지를 지울까요?')) return;
-    const targetRef = ref(db, `messages/${key}`);
-    remove(targetRef).catch((err) => {
-      console.error("삭제 실패:", err);
-      alert("삭제에 실패했습니다.");
-    });
+    remove(ref(db, `messages/${key}`));
   };
 
-  // 연속 메시지 타임스탬프 정리
   function reprocessConsecutiveTimestamps() {
     const wrappers = chatSpace.querySelectorAll('.msg-wrapper');
     for (let i = 0; i < wrappers.length; i++) {
@@ -397,7 +572,7 @@
         keys.forEach((key) => {
           const msg = data[key];
           if (!document.querySelector(`[data-key="${key}"]`)) {
-            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key);
+            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image);
             chatSpace.insertBefore(node, chatSpace.firstChild);
             oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
           }
@@ -409,24 +584,24 @@
         hasMoreHistory = false;
       }
     } catch (e) {
-      console.error("과거 메시지 불러오기 실패:", e);
+      console.error("과거 내역 로드 실패:", e);
     } finally {
       isLoadingMore = false;
     }
   }
 
-  // 실시간 메시지 추가 감지
+  // 실시간 메시지 감지
   const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
 
   onChildAdded(initialQuery, (snapshot) => {
     const data = snapshot.val();
     const key = snapshot.key;
 
-    if (data && data.message && !document.querySelector(`[data-key="${key}"]`)) {
+    if (data && !document.querySelector(`[data-key="${key}"]`)) {
       const timeStr = formatTime(data.timestamp);
-      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr);
+      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image);
 
-      const node = createMessageNode(data.sender, data.message, data.timestamp, key, isConsecutive);
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive);
       chatSpace.appendChild(node);
 
       lastSender = data.sender;
@@ -441,14 +616,13 @@
       if (isInitialLoad) {
         scrollToBottom();
       } else {
-        if (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight < 120) {
+        if (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight < 150) {
           scrollToBottom();
         }
       }
     }
   });
 
-  // 실시간 수정 감지 (상대방/내가 수정한 내용 즉시 반영)
   onChildChanged(messagesRef, (snapshot) => {
     const key = snapshot.key;
     const data = snapshot.val();
@@ -459,7 +633,6 @@
     }
   });
 
-  // 실시간 삭제 감지 (상대방/내가 삭제한 메시지 즉시 화면 제거)
   onChildRemoved(messagesRef, (snapshot) => {
     const key = snapshot.key;
     const el = document.querySelector(`[data-key="${key}"]`);
@@ -480,20 +653,29 @@
     }
   });
 
-  // 전송 함수
+  // 메시지 및 사진 전송
   window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
-    if (!text) return;
+
+    // 텍스트와 사진 모두 없으면 리턴
+    if (!text && !currentBase64Image) return;
 
     input.value = '';
     sendBtn.disabled = true;
 
-    push(messagesRef, {
+    const payload = {
       sender: currentUser,
-      message: text,
+      message: text || '',
       timestamp: Date.now()
-    }).then(() => {
+    };
+
+    if (currentBase64Image) {
+      payload.image = currentBase64Image;
+    }
+
+    push(messagesRef, payload).then(() => {
+      clearAttachedImage();
       input.focus();
       scrollToBottom();
     }).catch((error) => {
