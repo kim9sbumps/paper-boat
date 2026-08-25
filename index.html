@@ -289,7 +289,6 @@
   </div>
 
   <div class="input-box">
-    <!-- 숨겨진 파일 선택창 -->
     <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
     <button class="clip-btn" onclick="document.getElementById('fileInput').click()" title="사진 첨부">
       <svg class="clip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -349,7 +348,7 @@
 
   function calculateDynamicPageSize() {
     const spaceHeight = chatSpace.clientHeight || window.innerHeight;
-    const calculated = Math.ceil(spaceHeight / 65) + 3;
+    const calculated = Math.ceil(spaceHeight / 60) + 4;
     return Math.max(12, Math.min(calculated, 35));
   }
 
@@ -372,6 +371,16 @@
     return `${ampm} ${hours}:${minutes}`;
   }
 
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chatSpace.scrollTop = chatSpace.scrollHeight;
+    });
+  }
+
+  function isNearBottom() {
+    return (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight) < 250;
+  }
+
   // 메시지 렌더링 노드 생성
   function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false) {
     const wrapper = document.createElement('div');
@@ -391,7 +400,7 @@
       wrapper.appendChild(line);
     }
 
-    // 사진이 첨부된 경우 폴라로이드 프레임 생성
+    // 사진이 첨부된 경우
     if (imageUrl) {
       const frame = document.createElement('div');
       frame.className = 'attached-photo-frame';
@@ -401,6 +410,13 @@
       img.className = 'attached-img';
       img.src = imageUrl;
       img.alt = '첨부된 사진';
+
+      // ★ 핵심: 이미지가 실제 브라우저에 로드되어 높이가 생겼을 때 스크롤 재보정
+      img.onload = () => {
+        if (isInitialLoad || isNearBottom()) {
+          scrollToBottom();
+        }
+      };
 
       frame.appendChild(img);
       wrapper.appendChild(frame);
@@ -453,7 +469,7 @@
     document.getElementById('imageModal').style.display = 'none';
   };
 
-  // 이미지 선택 및 클라이언트 경량 압축 (가로 최대 800px, JPEG 75%)
+  // 이미지 압축
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -482,7 +498,6 @@
 
         currentBase64Image = canvas.toDataURL('image/jpeg', 0.75);
 
-        // 미리보기 바 활성화
         document.getElementById('previewImg').src = currentBase64Image;
         document.getElementById('previewBar').style.display = 'flex';
       };
@@ -539,10 +554,6 @@
         timeNode.style.display = 'block';
       }
     }
-  }
-
-  function scrollToBottom() {
-    chatSpace.scrollTop = chatSpace.scrollHeight;
   }
 
   // 상단 과거 대화 불러오기
@@ -613,12 +624,8 @@
 
       reprocessConsecutiveTimestamps();
 
-      if (isInitialLoad) {
+      if (isInitialLoad || isNearBottom()) {
         scrollToBottom();
-      } else {
-        if (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight < 150) {
-          scrollToBottom();
-        }
       }
     }
   });
@@ -645,7 +652,7 @@
   setTimeout(() => {
     isInitialLoad = false;
     scrollToBottom();
-  }, 300);
+  }, 400);
 
   chatSpace.addEventListener('scroll', () => {
     if (chatSpace.scrollTop <= 40) {
@@ -658,7 +665,6 @@
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
 
-    // 텍스트와 사진 모두 없으면 리턴
     if (!text && !currentBase64Image) return;
 
     input.value = '';
