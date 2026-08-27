@@ -221,7 +221,7 @@
       cursor: pointer;
     }
 
-    /* 하단 연필선 입력 영역 */
+    /* 하단 입력 영역 */
     .input-box {
       padding: 14px 20px 20px;
       background: #faf7f2;
@@ -282,7 +282,7 @@
       cursor: not-allowed;
     }
 
-    /* 확대 모달 (고화질 디스플레이 최적화) */
+    /* 확대 모달 */
     .image-modal {
       display: none;
       position: fixed;
@@ -304,7 +304,6 @@
       box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
       background: #faf7f2;
       padding: 6px;
-      image-rendering: auto;
       object-fit: contain;
     }
 
@@ -348,12 +347,15 @@
       padding-bottom: 10px;
     }
 
+    /* 사진첩 그리드 영역 */
     .gallery-content {
       flex: 1;
       overflow-y: auto;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
+      align-items: start; /* 세로 늘어짐 방지 */
+      align-content: start; /* 상단부터 채우기 */
       padding-right: 4px;
     }
     
@@ -365,18 +367,21 @@
       border-radius: 2px;
     }
 
+    /* 개별 사진 카드 프레임 */
     .gallery-photo-item {
       background: #ffffff;
-      padding: 5px;
+      padding: 6px 6px 8px;
       border: 1px solid #eae4d9;
       border-radius: 4px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
+      height: fit-content; /* 내용물 높이에 맞춤 */
     }
+    
     .gallery-photo-thumb {
       width: 100%;
-      height: 110px;
+      height: 115px;
       object-fit: cover;
       border-radius: 2px;
       display: block;
@@ -715,7 +720,6 @@
     });
   }
 
-  // 고화질 최적화 압축 (최대 1600px, JPEG 88%)
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -727,7 +731,7 @@
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxDim = 1600; // 해상도 대폭 상향
+        const maxDim = 1600;
 
         if (width > height && width > maxDim) {
           height = Math.round((height * maxDim) / width);
@@ -744,7 +748,7 @@
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        currentBase64Image = canvas.toDataURL('image/jpeg', 0.88); // 88% 고화질
+        currentBase64Image = canvas.toDataURL('image/jpeg', 0.88);
 
         document.getElementById('previewImg').src = currentBase64Image;
         document.getElementById('previewBar').style.display = 'flex';
