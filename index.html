@@ -19,18 +19,20 @@
       color: #2c2520;
     }
 
-    .paper-container {
-      width: 100%;
-      max-width: 460px;
-      height: 100vh;
-      max-height: 840px;
-      background: #faf7f2;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
+/* 편지지 컨테이너: 상단에 튀어나올 공간(여백) 확보 */
+.paper-container {
+  width: 100%;
+  max-width: 460px;
+  height: 96vh;
+  max-height: 840px;
+  margin-top: 18px;   /* 포스트잇이 뷰포트 밖으로 잘리지 않게 상단 여백 추가 */
+  background: #faf7f2;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;  /* 테두리 바깥 노출 허용 */
+  position: relative;
+}
 
     @media (min-width: 480px) {
       .paper-container {
@@ -42,34 +44,29 @@
 /* 상단 인덱스 바 */
 .postit-index-bar {
   position: absolute;
-  top: -16px;        /* 포스트잇 높이와 동일하게 마이너스 배치 */
+  top: -16px;
   left: 32px;
-  z-index: 50;
+  z-index: 99;
 }
 
 /* 포스트잇 본체 */
 .postit-strip {
   width: 13px;
-  height: 16px;      /* 튀어나올 길이만큼만 지정 (14~18px 권장) */
+  height: 16px;
   background: rgba(240, 155, 175, 0.85);
-  border-radius: 2px 2px 0 0; /* 윗 모서리만 둥글게 */
+  border-radius: 2px 2px 0 0;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-bottom: none;        /* 편지지와 맞닿는 하단 테두리 제거 */
+  border-bottom: none;
   cursor: pointer;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease;
-  position: relative;
+  transition: transform 0.15s ease;
+  display: block;
 }
 
-    .postit-strip::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 8px;
-      background: rgba(210, 120, 140, 0.9);
-    }
+/* 마우스 올렸을 때 부드럽게 유지 */
+.postit-strip:hover {
+  transform: translateY(-2px);
+}
 
 /* 마우스 올렸을 때 살짝 위로 들림 */
 .postit-strip:hover {
