@@ -676,6 +676,9 @@ window.openGalleryModal = function() {
  // 과거에 올린 사진까지 DB에서 전체 조회하여 사진첩에 렌더링
 async function renderGalleryContent() {
   const galleryContent = document.getElementById('galleryContent');
+  // renderGalleryContent 함수 내부
+  galleryContent.innerHTML = '';
+  galleryContent.scrollTop = 0; // 목록 생성 전 최상단 리셋
   galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오는 중...</div>';
 
   try {
