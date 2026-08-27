@@ -39,14 +39,52 @@
       }
     }
 
+    /* 상단 슬림 인덱스 스트립 */
+    .postit-index-bar {
+      position: absolute;
+      top: 0;
+      left: 32px;
+      z-index: 20;
+    }
+
+    .postit-strip {
+      width: 13px;
+      height: 28px;
+      background: rgba(240, 155, 175, 0.85);
+      border-radius: 0 0 2px 2px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-top: none;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .postit-strip::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: rgba(210, 120, 140, 0.9);
+    }
+
+    .postit-strip:hover {
+      height: 33px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+      transform: translateY(2px);
+    }
+
     /* 대화 영역 */
     .chat-space {
       flex: 1;
-      padding: 36px 24px 16px;
+      padding: 38px 24px 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      position: relative;
     }
     
     .chat-space::-webkit-scrollbar {
@@ -70,7 +108,6 @@
       margin-top: -8px;
     }
     
-    /* 발신자별 정렬 */
     .my-msg {
       align-self: flex-end;
       align-items: flex-end;
@@ -82,14 +119,13 @@
       text-align: left;
     }
 
-    /* 텍스트 본문 */
     .note-line {
       font-size: 15px;
       line-height: 1.65;
       word-break: break-all;
     }
 
-    /* 첨부 사진 (폴라로이드 스타일 프레임) */
+    /* 첨부 사진 */
     .attached-photo-frame {
       margin-top: 6px;
       background: #ffffff;
@@ -116,7 +152,7 @@
     .color-soleum { color: #800000; }
     .color-saheon { color: #386b2c; }
 
-    /* 메타 영역 (시간 & 수정/삭제 버튼) */
+    /* 메타 영역 */
     .msg-meta {
       display: flex;
       align-items: center;
@@ -156,7 +192,7 @@
       text-decoration: underline;
     }
 
-    /* 사진 첨부 미리보기 바 (입력창 상단) */
+    /* 사진 첨부 미리보기 바 */
     .attach-preview-bar {
       display: none;
       padding: 8px 20px;
@@ -246,7 +282,7 @@
       cursor: not-allowed;
     }
 
-    /* 사진 확대 모달(Lightbox) */
+    /* 확대 모달 (고화질 디스플레이 최적화) */
     .image-modal {
       display: none;
       position: fixed;
@@ -254,20 +290,137 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(30, 26, 22, 0.85);
+      background: rgba(30, 26, 22, 0.88);
       z-index: 1000;
       justify-content: center;
       align-items: center;
       cursor: zoom-out;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(5px);
     }
     .image-modal img {
-      max-width: 90vw;
-      max-height: 85vh;
-      border-radius: 6px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 4px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
       background: #faf7f2;
       padding: 6px;
+      image-rendering: auto;
+      object-fit: contain;
+    }
+
+    /* 사진첩 모달 */
+    .gallery-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(30, 26, 22, 0.5);
+      z-index: 500;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(3px);
+      animation: fadeIn 0.25s ease;
+    }
+
+    .gallery-container {
+      width: 88%;
+      max-width: 400px;
+      height: 80%;
+      max-height: 640px;
+      background: #faf7f2;
+      border: 1px solid #e0d8ce;
+      border-radius: 8px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .gallery-header {
+      font-size: 15px;
+      color: #655a4f;
+      text-align: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eae4d9;
+      padding-bottom: 10px;
+    }
+
+    .gallery-content {
+      flex: 1;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding-right: 4px;
+    }
+    
+    .gallery-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .gallery-content::-webkit-scrollbar-thumb {
+      background: #eae4d9;
+      border-radius: 2px;
+    }
+
+    .gallery-photo-item {
+      background: #ffffff;
+      padding: 5px;
+      border: 1px solid #eae4d9;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+    }
+    .gallery-photo-thumb {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 2px;
+      display: block;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .gallery-photo-thumb:hover {
+      opacity: 0.92;
+    }
+
+    .gallery-photo-caption {
+      margin-top: 6px;
+      padding: 2px 2px 0;
+      font-size: 11px;
+      color: #8c7b6c;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      text-align: center;
+      transition: color 0.15s;
+    }
+    .gallery-photo-caption:hover {
+      color: #2c2520;
+      text-decoration: underline;
+    }
+
+    .gallery-footer {
+      padding-top: 14px;
+      text-align: center;
+      border-top: 1px solid #eae4d9;
+    }
+    .close-gallery-btn {
+      background: transparent;
+      border: none;
+      color: #a09589;
+      font-family: 'Gowun Batang', serif;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 10px;
+    }
+    .close-gallery-btn:hover {
+      color: #655a4f;
+      text-decoration: underline;
     }
 
     @keyframes fadeIn {
@@ -279,9 +432,12 @@
 <body>
 
 <div class="paper-container">
+  <div class="postit-index-bar">
+    <div class="postit-strip" onclick="openGalleryModal()" title="사진 모아보기"></div>
+  </div>
+
   <div class="chat-space" id="chatSpace"></div>
 
-  <!-- 사진 첨부 미리보기 바 -->
   <div class="attach-preview-bar" id="previewBar">
     <img id="previewImg" class="preview-thumb" src="" alt="미리보기">
     <span class="preview-info">사진이 첨부되었습니다.</span>
@@ -300,12 +456,20 @@
   </div>
 </div>
 
-<!-- 사진 전체화면 확대 라이트박스 -->
 <div class="image-modal" id="imageModal" onclick="closeImageModal()">
   <img id="modalImg" src="" alt="확대된 사진">
 </div>
 
-<!-- Firebase SDK -->
+<div class="gallery-overlay" id="galleryOverlay">
+  <div class="gallery-container">
+    <div class="gallery-header">사진 모아보기</div>
+    <div class="gallery-content" id="galleryContent"></div>
+    <div class="gallery-footer">
+      <button class="close-gallery-btn" onclick="closeGalleryModal()">— 닫기 —</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
   import { 
@@ -371,6 +535,15 @@
     return `${ampm} ${hours}:${minutes}`;
   }
 
+  function formatDateShort(timestamp) {
+    if (!timestamp) return '';
+    const d = new Date(timestamp);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yy}.${mm}.${dd}`;
+  }
+
   function scrollToBottom() {
     requestAnimationFrame(() => {
       chatSpace.scrollTop = chatSpace.scrollHeight;
@@ -381,8 +554,7 @@
     return (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight) < 250;
   }
 
-  // 메시지 렌더링 노드 생성
-  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false) {
+  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false, photoTitle = '') {
     const wrapper = document.createElement('div');
     const isMyMsg = (sender === currentUser);
     const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
@@ -391,7 +563,9 @@
     wrapper.className = `msg-wrapper ${alignClass} ${isConsecutive ? 'is-consecutive' : ''}`;
     if (key) wrapper.setAttribute('data-key', key);
     wrapper.setAttribute('data-sender', sender);
+    wrapper.setAttribute('data-timestamp', timestamp || '');
     wrapper.setAttribute('data-time', formatTime(timestamp));
+    if (photoTitle) wrapper.setAttribute('data-photo-title', photoTitle);
 
     if (message) {
       const line = document.createElement('div');
@@ -400,7 +574,6 @@
       wrapper.appendChild(line);
     }
 
-    // 사진이 첨부된 경우
     if (imageUrl) {
       const frame = document.createElement('div');
       frame.className = 'attached-photo-frame';
@@ -411,7 +584,6 @@
       img.src = imageUrl;
       img.alt = '첨부된 사진';
 
-      // ★ 핵심: 이미지가 실제 브라우저에 로드되어 높이가 생겼을 때 스크롤 재보정
       img.onload = () => {
         if (isInitialLoad || isNearBottom()) {
           scrollToBottom();
@@ -430,7 +602,6 @@
     timeDiv.innerText = formatTime(timestamp);
     metaDiv.appendChild(timeDiv);
 
-    // 수정 및 삭제
     if (isMyMsg && key) {
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'msg-actions';
@@ -457,7 +628,6 @@
     return wrapper;
   }
 
-  // 라이트박스 열기/닫기
   window.openImageModal = function(src) {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
@@ -469,7 +639,83 @@
     document.getElementById('imageModal').style.display = 'none';
   };
 
-  // 이미지 압축
+  window.openGalleryModal = function() {
+    renderGalleryContent();
+    document.getElementById('galleryOverlay').style.display = 'flex';
+  };
+
+  window.closeGalleryModal = function() {
+    document.getElementById('galleryOverlay').style.display = 'none';
+  };
+
+  window.editPhotoTitle = function(key, currentTitle) {
+    const newTitle = prompt('사진 제목을 입력하세요:', currentTitle);
+    if (newTitle === null) return;
+    const trimmed = newTitle.trim();
+    
+    update(ref(db, `messages/${key}`), { photoTitle: trimmed }).then(() => {
+      const wrapper = document.querySelector(`[data-key="${key}"]`);
+      if (wrapper) wrapper.setAttribute('data-photo-title', trimmed);
+      renderGalleryContent();
+    }).catch(err => {
+      console.error("사진 제목 수정 실패:", err);
+    });
+  };
+
+  function renderGalleryContent() {
+    const galleryContent = document.getElementById('galleryContent');
+    galleryContent.innerHTML = '';
+
+    const chatImages = chatSpace.querySelectorAll('.attached-img');
+    
+    if (chatImages.length === 0) {
+      galleryContent.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #a09589; font-size: 13px; padding-top: 30px;">— 아직 등록된 사진이 없습니다 —</div>';
+      return;
+    }
+
+    const reversedImages = Array.from(chatImages).reverse();
+    
+    reversedImages.forEach(img => {
+      const src = img.src;
+      const wrapper = img.closest('.msg-wrapper');
+      const key = wrapper ? wrapper.getAttribute('data-key') : null;
+      const sender = wrapper ? wrapper.getAttribute('data-sender') : '';
+      const timestamp = wrapper ? Number(wrapper.getAttribute('data-timestamp')) : 0;
+      const customTitle = wrapper ? wrapper.getAttribute('data-photo-title') : '';
+
+      const defaultCaption = `${formatDateShort(timestamp)} · ${sender}`;
+      const displayTitle = customTitle || defaultCaption;
+
+      const item = document.createElement('div');
+      item.className = 'gallery-photo-item';
+
+      const galleryImg = document.createElement('img');
+      galleryImg.className = 'gallery-photo-thumb';
+      galleryImg.src = src;
+      galleryImg.alt = displayTitle;
+      galleryImg.onclick = () => {
+        closeGalleryModal();
+        openImageModal(src);
+      };
+
+      const captionDiv = document.createElement('div');
+      captionDiv.className = 'gallery-photo-caption';
+      captionDiv.innerText = displayTitle;
+      captionDiv.title = '클릭하여 사진 제목 수정';
+      if (key) {
+        captionDiv.onclick = (e) => {
+          e.stopPropagation();
+          editPhotoTitle(key, customTitle || defaultCaption);
+        };
+      }
+
+      item.appendChild(galleryImg);
+      item.appendChild(captionDiv);
+      galleryContent.appendChild(item);
+    });
+  }
+
+  // 고화질 최적화 압축 (최대 1600px, JPEG 88%)
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -481,7 +727,7 @@
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxDim = 800;
+        const maxDim = 1600; // 해상도 대폭 상향
 
         if (width > height && width > maxDim) {
           height = Math.round((height * maxDim) / width);
@@ -494,9 +740,11 @@
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        currentBase64Image = canvas.toDataURL('image/jpeg', 0.75);
+        currentBase64Image = canvas.toDataURL('image/jpeg', 0.88); // 88% 고화질
 
         document.getElementById('previewImg').src = currentBase64Image;
         document.getElementById('previewBar').style.display = 'flex';
@@ -512,7 +760,6 @@
     document.getElementById('previewBar').style.display = 'none';
   };
 
-  // 수정
   window.editMessage = function(key, currentText) {
     const newText = prompt('메시지를 수정하세요:', currentText);
     if (newText === null) return;
@@ -524,7 +771,6 @@
     update(ref(db, `messages/${key}`), { message: trimmed });
   };
 
-  // 삭제
   window.deleteMessage = function(key) {
     if (!confirm('이 메시지를 지울까요?')) return;
     remove(ref(db, `messages/${key}`));
@@ -556,7 +802,6 @@
     }
   }
 
-  // 상단 과거 대화 불러오기
   async function loadMoreHistory() {
     if (isLoadingMore || !hasMoreHistory || !oldestTimestamp) return;
     isLoadingMore = true;
@@ -583,7 +828,7 @@
         keys.forEach((key) => {
           const msg = data[key];
           if (!document.querySelector(`[data-key="${key}"]`)) {
-            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image);
+            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image, false, msg.photoTitle || '');
             chatSpace.insertBefore(node, chatSpace.firstChild);
             oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
           }
@@ -601,7 +846,6 @@
     }
   }
 
-  // 실시간 메시지 감지
   const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
 
   onChildAdded(initialQuery, (snapshot) => {
@@ -612,7 +856,7 @@
       const timeStr = formatTime(data.timestamp);
       const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image);
 
-      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive);
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '');
       chatSpace.appendChild(node);
 
       lastSender = data.sender;
@@ -634,9 +878,14 @@
     const key = snapshot.key;
     const data = snapshot.val();
     const el = document.querySelector(`[data-key="${key}"]`);
-    if (el && data && data.message) {
-      const line = el.querySelector('.note-line');
-      if (line) line.innerText = data.message;
+    if (el && data) {
+      if (data.message) {
+        const line = el.querySelector('.note-line');
+        if (line) line.innerText = data.message;
+      }
+      if (data.photoTitle !== undefined) {
+        el.setAttribute('data-photo-title', data.photoTitle);
+      }
     }
   });
 
@@ -660,7 +909,6 @@
     }
   });
 
-  // 메시지 및 사진 전송
   window.sendMsg = function() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
