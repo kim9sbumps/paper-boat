@@ -282,7 +282,7 @@
       cursor: not-allowed;
     }
 
-    /* 확대 모달 */
+    /* 확대 라이트박스 */
     .image-modal {
       display: none;
       position: fixed;
@@ -290,7 +290,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(30, 26, 22, 0.88);
+      background: rgba(30, 26, 22, 0.9);
       z-index: 1000;
       justify-content: center;
       align-items: center;
@@ -307,7 +307,7 @@
       object-fit: contain;
     }
 
-    /* 사진첩 모달 */
+    /* 사진첩 모달 (정갈한 종이 앨범 레이아웃) */
     .gallery-overlay {
       display: none;
       position: fixed;
@@ -315,7 +315,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(30, 26, 22, 0.5);
+      background: rgba(44, 37, 32, 0.45);
       z-index: 500;
       justify-content: center;
       align-items: center;
@@ -325,29 +325,50 @@
 
     .gallery-container {
       width: 88%;
-      max-width: 400px;
-      height: 80%;
+      max-width: 410px;
+      height: 82%;
       max-height: 640px;
       background: #faf7f2;
       border: 1px solid #e0d8ce;
       border-radius: 8px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      padding: 20px;
+      padding: 18px 20px 20px;
+      position: relative;
     }
 
     .gallery-header {
-      font-size: 15px;
-      color: #655a4f;
-      text-align: center;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #eae4d9;
-      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      margin-bottom: 4px;
     }
 
-    /* 사진첩 컨테이너: flex-wrap 기반 안전 배치 */
+    .gallery-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #655a4f;
+      letter-spacing: 0.5px;
+    }
+
+    .gallery-close-x {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #a89d91;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+    .gallery-close-x:hover {
+      color: #3e352d;
+    }
+
+    /* 사진첩 그리드 */
     .gallery-content {
       flex: 1;
       overflow-y: auto;
@@ -356,6 +377,7 @@
       align-content: flex-start;
       gap: 12px;
       padding-right: 4px;
+      padding-top: 4px;
     }
     
     .gallery-content::-webkit-scrollbar {
@@ -366,7 +388,7 @@
       border-radius: 2px;
     }
 
-    /* 개별 사진 카드: 절반 너비 고정, 늘어남 차단 */
+    /* 개별 사진 카드 */
     .gallery-photo-item {
       width: calc(50% - 6px);
       flex: 0 0 calc(50% - 6px);
@@ -412,25 +434,6 @@
       text-decoration: underline;
     }
 
-    .gallery-footer {
-      padding-top: 14px;
-      text-align: center;
-      border-top: 1px solid #eae4d9;
-    }
-    .close-gallery-btn {
-      background: transparent;
-      border: none;
-      color: #a09589;
-      font-family: 'Gowun Batang', serif;
-      font-size: 13px;
-      cursor: pointer;
-      padding: 4px 10px;
-    }
-    .close-gallery-btn:hover {
-      color: #655a4f;
-      text-decoration: underline;
-    }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -464,17 +467,19 @@
   </div>
 </div>
 
+<!-- 사진 전체화면 확대 라이트박스 -->
 <div class="image-modal" id="imageModal" onclick="closeImageModal()">
   <img id="modalImg" src="" alt="확대된 사진">
 </div>
 
-<div class="gallery-overlay" id="galleryOverlay">
+<!-- 사진첩 오버레이 -->
+<div class="gallery-overlay" id="galleryOverlay" onclick="if(event.target===this) closeGalleryModal()">
   <div class="gallery-container">
-    <div class="gallery-header">사진 모아 보기</div>
-    <div class="gallery-content" id="galleryContent"></div>
-    <div class="gallery-footer">
-      <button class="close-gallery-btn" onclick="closeGalleryModal()">— 닫기 —</button>
+    <div class="gallery-header">
+      <div class="gallery-title">사진첩</div>
+      <button class="gallery-close-x" onclick="closeGalleryModal()" title="닫기">✕</button>
     </div>
+    <div class="gallery-content" id="galleryContent"></div>
   </div>
 </div>
 
@@ -517,6 +522,7 @@
   const chatSpace = document.getElementById('chatSpace');
   const sendBtn = document.getElementById('sendBtn');
   let currentBase64Image = null;
+  let openedFromGallery = false; // 사진첩에서 열었는지 여부 추적 플래그
 
   function calculateDynamicPageSize() {
     const spaceHeight = chatSpace.clientHeight || window.innerHeight;
@@ -585,7 +591,7 @@
     if (imageUrl) {
       const frame = document.createElement('div');
       frame.className = 'attached-photo-frame';
-      frame.onclick = () => openImageModal(imageUrl);
+      frame.onclick = () => openImageModal(imageUrl, false);
 
       const img = document.createElement('img');
       img.className = 'attached-img';
@@ -636,15 +642,21 @@
     return wrapper;
   }
 
-  window.openImageModal = function(src) {
+  // 라이트박스 열기 (출처 구분)
+  window.openImageModal = function(src, fromGallery = false) {
+    openedFromGallery = fromGallery;
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
     modalImg.src = src;
     modal.style.display = 'flex';
   };
 
+  // 라이트박스 닫기 (사진첩에서 열었을 경우 사진첩 화면 유지)
   window.closeImageModal = function() {
     document.getElementById('imageModal').style.display = 'none';
+    if (openedFromGallery) {
+      document.getElementById('galleryOverlay').style.display = 'flex';
+    }
   };
 
   window.openGalleryModal = function() {
@@ -677,7 +689,7 @@
     const chatImages = chatSpace.querySelectorAll('.attached-img');
     
     if (chatImages.length === 0) {
-      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 30px;">— 아직 등록된 사진이 없습니다 —</div>';
+      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
       return;
     }
 
@@ -702,8 +714,8 @@
       galleryImg.src = src;
       galleryImg.alt = displayTitle;
       galleryImg.onclick = () => {
-        closeGalleryModal();
-        openImageModal(src);
+        // 사진첩을 유지한 채 라이트박스 띄움
+        openImageModal(src, true);
       };
 
       const captionDiv = document.createElement('div');
