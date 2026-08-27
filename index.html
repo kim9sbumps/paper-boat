@@ -646,10 +646,14 @@
     }
   };
 
-  window.openGalleryModal = function() {
-    renderGalleryContent();
-    document.getElementById('galleryOverlay').style.display = 'flex';
-  };
+window.openGalleryModal = function() {
+  const galleryContent = document.getElementById('galleryContent');
+  if (galleryContent) {
+    galleryContent.scrollTop = 0; // 스크롤 맨 위로 초기화
+  }
+  renderGalleryContent();
+  document.getElementById('galleryOverlay').style.display = 'flex';
+};
 
   window.closeGalleryModal = function() {
     document.getElementById('galleryOverlay').style.display = 'none';
