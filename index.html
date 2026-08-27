@@ -647,12 +647,19 @@
   };
 
 window.openGalleryModal = function() {
+  const overlay = document.getElementById('galleryOverlay');
   const galleryContent = document.getElementById('galleryContent');
+
+  // 1. 모달 창을 먼저 화면에 띄움
+  overlay.style.display = 'flex';
+
+  // 2. 화면에 표시된 후 스크롤을 0으로 초기화
   if (galleryContent) {
-    galleryContent.scrollTop = 0; // 스크롤 맨 위로 초기화
+    galleryContent.scrollTop = 0;
   }
+
+  // 3. 내용 렌더링 시작
   renderGalleryContent();
-  document.getElementById('galleryOverlay').style.display = 'flex';
 };
 
   window.closeGalleryModal = function() {
@@ -676,10 +683,8 @@ window.openGalleryModal = function() {
  // 과거에 올린 사진까지 DB에서 전체 조회하여 사진첩에 렌더링
 async function renderGalleryContent() {
   const galleryContent = document.getElementById('galleryContent');
-  // renderGalleryContent 함수 내부
-  galleryContent.innerHTML = '';
-  galleryContent.scrollTop = 0; // 목록 생성 전 최상단 리셋
   galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오는 중...</div>';
+  galleryContent.scrollTop = 0;
 
   try {
     const snapshot = await get(messagesRef);
@@ -689,7 +694,6 @@ async function renderGalleryContent() {
     }
 
     const data = snapshot.val();
-    // image 필드가 있는 메시지만 추출 후 최신순 정렬
     const photoItems = Object.keys(data)
       .map(key => ({ key, ...data[key] }))
       .filter(item => item.image)
@@ -730,6 +734,10 @@ async function renderGalleryContent() {
       card.appendChild(captionDiv);
       galleryContent.appendChild(card);
     });
+
+    // 4. 사진 카드가 전부 DOM에 꽂힌 직후 다시 한번 최상단 고정
+    galleryContent.scrollTop = 0;
+
   } catch (err) {
     console.error("사진첩 전체 로드 실패:", err);
     galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오지 못했습니다.</div>';
