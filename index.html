@@ -669,58 +669,65 @@
     });
   };
 
-  function renderGalleryContent() {
-    const galleryContent = document.getElementById('galleryContent');
-    galleryContent.innerHTML = '';
+ // 과거에 올린 사진까지 DB에서 전체 조회하여 사진첩에 렌더링
+async function renderGalleryContent() {
+  const galleryContent = document.getElementById('galleryContent');
+  galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오는 중...</div>';
 
-    const chatImages = chatSpace.querySelectorAll('.attached-img');
-    
-    if (chatImages.length === 0) {
+  try {
+    const snapshot = await get(messagesRef);
+    if (!snapshot.exists()) {
       galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
       return;
     }
 
-    const reversedImages = Array.from(chatImages).reverse();
-    
-    reversedImages.forEach(img => {
-      const src = img.src;
-      const wrapper = img.closest('.msg-wrapper');
-      const key = wrapper ? wrapper.getAttribute('data-key') : null;
-      const sender = wrapper ? wrapper.getAttribute('data-sender') : '';
-      const timestamp = wrapper ? Number(wrapper.getAttribute('data-timestamp')) : 0;
-      const customTitle = wrapper ? wrapper.getAttribute('data-photo-title') : '';
+    const data = snapshot.val();
+    // image 필드가 있는 메시지만 추출 후 최신순 정렬
+    const photoItems = Object.keys(data)
+      .map(key => ({ key, ...data[key] }))
+      .filter(item => item.image)
+      .sort((a, b) => b.timestamp - a.timestamp);
 
-      const defaultCaption = `${formatDateShort(timestamp)} · ${sender}`;
-      const displayTitle = customTitle || defaultCaption;
+    if (photoItems.length === 0) {
+      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
+      return;
+    }
 
-      const item = document.createElement('div');
-      item.className = 'gallery-photo-item';
+    galleryContent.innerHTML = '';
+
+    photoItems.forEach(item => {
+      const defaultCaption = `${formatDateShort(item.timestamp)} · ${item.sender}`;
+      const displayTitle = item.photoTitle || defaultCaption;
+
+      const card = document.createElement('div');
+      card.className = 'gallery-photo-item';
 
       const galleryImg = document.createElement('img');
       galleryImg.className = 'gallery-photo-thumb';
-      galleryImg.src = src;
+      galleryImg.src = item.image;
       galleryImg.alt = displayTitle;
       galleryImg.onclick = () => {
-        // 사진첩을 유지한 채 라이트박스 띄움
-        openImageModal(src, true);
+        openImageModal(item.image, true);
       };
 
       const captionDiv = document.createElement('div');
       captionDiv.className = 'gallery-photo-caption';
       captionDiv.innerText = displayTitle;
       captionDiv.title = '클릭하여 사진 제목 수정';
-      if (key) {
-        captionDiv.onclick = (e) => {
-          e.stopPropagation();
-          editPhotoTitle(key, customTitle || defaultCaption);
-        };
-      }
+      captionDiv.onclick = (e) => {
+        e.stopPropagation();
+        editPhotoTitle(item.key, item.photoTitle || defaultCaption);
+      };
 
-      item.appendChild(galleryImg);
-      item.appendChild(captionDiv);
-      galleryContent.appendChild(item);
+      card.appendChild(galleryImg);
+      card.appendChild(captionDiv);
+      galleryContent.appendChild(card);
     });
+  } catch (err) {
+    console.error("사진첩 전체 로드 실패:", err);
+    galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오지 못했습니다.</div>';
   }
+}
 
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
