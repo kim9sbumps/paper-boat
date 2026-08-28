@@ -19,20 +19,20 @@
       color: #2c2520;
     }
 
-/* 편지지 컨테이너: 상단에 튀어나올 공간(여백) 확보 */
-.paper-container {
-  width: 100%;
-  max-width: 460px;
-  height: 96vh;
-  max-height: 840px;
-  margin-top: 18px;   /* 포스트잇이 뷰포트 밖으로 잘리지 않게 상단 여백 추가 */
-  background: #faf7f2;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  overflow: visible;  /* 테두리 바깥 노출 허용 */
-  position: relative;
-}
+    /* 편지지 컨테이너 */
+    .paper-container {
+      width: 100%;
+      max-width: 460px;
+      height: 96vh;
+      max-height: 840px;
+      margin-top: 18px;
+      background: #faf7f2;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      position: relative;
+    }
 
     @media (min-width: 480px) {
       .paper-container {
@@ -41,27 +41,30 @@
       }
     }
 
-/* 상단 인덱스 바 */
-.postit-index-bar {
-  position: absolute;
-  top: -16px;
-  left: 32px;
-  z-index: 99;
-}
+    /* 상단 슬림 인덱스 스트립 */
+    .postit-index-bar {
+      position: absolute;
+      top: -16px;
+      left: 32px;
+      z-index: 99;
+    }
 
-/* 포스트잇 본체 */
-.postit-strip {
-  width: 13px;
-  height: 16px;
-  background: rgba(240, 155, 175, 0.85);
-  border-radius: 2px 2px 0 0;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-bottom: none;
-  cursor: pointer;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease;
-  display: block;
-}
+    .postit-strip {
+      width: 13px;
+      height: 16px;
+      background: rgba(240, 155, 175, 0.85);
+      border-radius: 2px 2px 0 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-bottom: none;
+      cursor: pointer;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.04);
+      transition: transform 0.15s ease;
+      display: block;
+    }
+
+    .postit-strip:hover {
+      transform: translateY(-2px);
+    }
 
     /* 대화 영역 */
     .chat-space {
@@ -86,9 +89,15 @@
     .msg-wrapper {
       display: flex;
       flex-direction: column;
-      max-width: 82%;
+      max-width: 88%;
       position: relative;
       animation: fadeIn 0.3s ease-in-out;
+      transition: background-color 0.4s ease;
+      border-radius: 4px;
+    }
+
+    .msg-wrapper.highlight-msg {
+      background-color: rgba(230, 220, 205, 0.5);
     }
 
     .msg-wrapper.is-consecutive {
@@ -104,6 +113,48 @@
       align-self: flex-start;
       align-items: flex-start;
       text-align: left;
+    }
+
+    /* 정돈된 디스코드 스타일 답장 인용 헤더 */
+    .reply-quote-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #9c8e82;
+      margin-bottom: 4px;
+      cursor: pointer;
+      max-width: 100%;
+      opacity: 0.88;
+      transition: opacity 0.15s;
+    }
+    .reply-quote-header:hover {
+      opacity: 1;
+      color: #4a3e35;
+    }
+
+    .my-msg .reply-quote-header {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+
+    .reply-icon {
+      font-size: 11px;
+      color: #a89d91;
+      flex-shrink: 0;
+    }
+
+    .reply-user-tag {
+      font-weight: 700;
+      color: #7b6d61;
+      flex-shrink: 0;
+    }
+
+    .reply-snippet {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 230px;
     }
 
     .note-line {
@@ -135,7 +186,7 @@
       object-fit: cover;
     }
 
-    /* 잉크 칼라 */
+    /* 잉크 색상 */
     .color-soleum { color: #800000; }
     .color-saheon { color: #386b2c; }
 
@@ -154,7 +205,7 @@
       color: #a59b91;
     }
 
-    /* 수정/삭제 버튼 */
+    /* 액션 버튼 (답장 / 수정 / 삭제) */
     .msg-actions {
       display: none;
       gap: 5px;
@@ -177,6 +228,32 @@
     .action-btn:hover {
       color: #4a3e35;
       text-decoration: underline;
+    }
+
+    /* 답장 대기 바 */
+    .replying-bar {
+      display: none;
+      padding: 7px 20px;
+      background: #f0eae1;
+      border-top: 1px solid #e4ddd2;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #706255;
+    }
+    .replying-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .cancel-reply-btn {
+      background: none;
+      border: none;
+      font-size: 14px;
+      color: #8c7b6c;
+      cursor: pointer;
+      padding: 0 4px;
     }
 
     /* 사진 첨부 미리보기 바 */
@@ -294,7 +371,7 @@
       object-fit: contain;
     }
 
-    /* 사진첩 모달 (정갈한 종이 앨범 레이아웃) */
+    /* 사진첩 모달 */
     .gallery-overlay {
       display: none;
       position: fixed;
@@ -355,7 +432,6 @@
       color: #3e352d;
     }
 
-    /* 사진첩 그리드 */
     .gallery-content {
       flex: 1;
       overflow-y: auto;
@@ -375,7 +451,6 @@
       border-radius: 2px;
     }
 
-    /* 개별 사진 카드 */
     .gallery-photo-item {
       width: calc(50% - 6px);
       flex: 0 0 calc(50% - 6px);
@@ -436,6 +511,13 @@
 
   <div class="chat-space" id="chatSpace"></div>
 
+  <!-- 답장 대기 바 -->
+  <div class="replying-bar" id="replyingBar">
+    <div class="replying-text" id="replyingText"></div>
+    <button class="cancel-reply-btn" onclick="clearReplyingTarget()" title="답장 취소">✕</button>
+  </div>
+
+  <!-- 사진 첨부 미리보기 바 -->
   <div class="attach-preview-bar" id="previewBar">
     <img id="previewImg" class="preview-thumb" src="" alt="미리보기">
     <span class="preview-info">사진이 첨부되었습니다.</span>
@@ -470,6 +552,7 @@
   </div>
 </div>
 
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
   import { 
@@ -488,7 +571,7 @@
     remove 
   } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
     authDomain: "paper-boat-695f8.firebaseapp.com",
     databaseURL: "https://paper-boat-695f8-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -509,7 +592,8 @@
   const chatSpace = document.getElementById('chatSpace');
   const sendBtn = document.getElementById('sendBtn');
   let currentBase64Image = null;
-  let openedFromGallery = false; // 사진첩에서 열었는지 여부 추적 플래그
+  let openedFromGallery = false;
+  let currentReplyTarget = null;
 
   function calculateDynamicPageSize() {
     const spaceHeight = chatSpace.clientHeight || window.innerHeight;
@@ -555,7 +639,30 @@
     return (chatSpace.scrollHeight - chatSpace.scrollTop - chatSpace.clientHeight) < 250;
   }
 
-  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false, photoTitle = '') {
+  window.setReplyingTarget = function(key, sender, text) {
+    currentReplyTarget = { key, sender, text: text || (key ? '사진' : '') };
+    const bar = document.getElementById('replyingBar');
+    const textSpan = document.getElementById('replyingText');
+    textSpan.innerText = `↩ ${sender}님에게 답장: ${currentReplyTarget.text}`;
+    bar.style.display = 'flex';
+    document.getElementById('msgInput').focus();
+  };
+
+  window.clearReplyingTarget = function() {
+    currentReplyTarget = null;
+    document.getElementById('replyingBar').style.display = 'none';
+  };
+
+  window.scrollToMessage = function(targetKey) {
+    const el = document.querySelector(`[data-key="${targetKey}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('highlight-msg');
+      setTimeout(() => el.classList.remove('highlight-msg'), 1500);
+    }
+  };
+
+  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false, photoTitle = '', replyTo = null) {
     const wrapper = document.createElement('div');
     const isMyMsg = (sender === currentUser);
     const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
@@ -567,6 +674,30 @@
     wrapper.setAttribute('data-timestamp', timestamp || '');
     wrapper.setAttribute('data-time', formatTime(timestamp));
     if (photoTitle) wrapper.setAttribute('data-photo-title', photoTitle);
+
+    // 정돈된 답장 인용 헤더
+    if (replyTo && replyTo.sender) {
+      const quoteHeader = document.createElement('div');
+      quoteHeader.className = 'reply-quote-header';
+      quoteHeader.onclick = () => scrollToMessage(replyTo.key);
+
+      const icon = document.createElement('span');
+      icon.className = 'reply-icon';
+      icon.innerText = '↳';
+
+      const userTag = document.createElement('span');
+      userTag.className = 'reply-user-tag';
+      userTag.innerText = `@${replyTo.sender}`;
+
+      const snippet = document.createElement('span');
+      snippet.className = 'reply-snippet';
+      snippet.innerText = replyTo.text || '사진';
+
+      quoteHeader.appendChild(icon);
+      quoteHeader.appendChild(userTag);
+      quoteHeader.appendChild(snippet);
+      wrapper.appendChild(quoteHeader);
+    }
 
     if (message) {
       const line = document.createElement('div');
@@ -603,24 +734,33 @@
     timeDiv.innerText = formatTime(timestamp);
     metaDiv.appendChild(timeDiv);
 
-    if (isMyMsg && key) {
+    if (key) {
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'msg-actions';
 
-      if (message) {
-        const editBtn = document.createElement('button');
-        editBtn.className = 'action-btn';
-        editBtn.innerText = '수정';
-        editBtn.onclick = () => editMessage(key, message);
-        actionsDiv.appendChild(editBtn);
-        actionsDiv.appendChild(document.createTextNode('·'));
-      }
+      const replyBtn = document.createElement('button');
+      replyBtn.className = 'action-btn';
+      replyBtn.innerText = '답장';
+      replyBtn.onclick = () => setReplyingTarget(key, sender, message);
+      actionsDiv.appendChild(replyBtn);
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'action-btn';
-      delBtn.innerText = '삭제';
-      delBtn.onclick = () => deleteMessage(key);
-      actionsDiv.appendChild(delBtn);
+      if (isMyMsg) {
+        if (message) {
+          actionsDiv.appendChild(document.createTextNode('·'));
+          const editBtn = document.createElement('button');
+          editBtn.className = 'action-btn';
+          editBtn.innerText = '수정';
+          editBtn.onclick = () => editMessage(key, message);
+          actionsDiv.appendChild(editBtn);
+        }
+
+        actionsDiv.appendChild(document.createTextNode('·'));
+        const delBtn = document.createElement('button');
+        delBtn.className = 'action-btn';
+        delBtn.innerText = '삭제';
+        delBtn.onclick = () => deleteMessage(key);
+        actionsDiv.appendChild(delBtn);
+      }
 
       metaDiv.appendChild(actionsDiv);
     }
@@ -629,7 +769,6 @@
     return wrapper;
   }
 
-  // 라이트박스 열기 (출처 구분)
   window.openImageModal = function(src, fromGallery = false) {
     openedFromGallery = fromGallery;
     const modal = document.getElementById('imageModal');
@@ -638,7 +777,6 @@
     modal.style.display = 'flex';
   };
 
-  // 라이트박스 닫기 (사진첩에서 열었을 경우 사진첩 화면 유지)
   window.closeImageModal = function() {
     document.getElementById('imageModal').style.display = 'none';
     if (openedFromGallery) {
@@ -646,21 +784,15 @@
     }
   };
 
-window.openGalleryModal = function() {
-  const overlay = document.getElementById('galleryOverlay');
-  const galleryContent = document.getElementById('galleryContent');
-
-  // 1. 모달 창을 먼저 화면에 띄움
-  overlay.style.display = 'flex';
-
-  // 2. 화면에 표시된 후 스크롤을 0으로 초기화
-  if (galleryContent) {
-    galleryContent.scrollTop = 0;
-  }
-
-  // 3. 내용 렌더링 시작
-  renderGalleryContent();
-};
+  window.openGalleryModal = function() {
+    const overlay = document.getElementById('galleryOverlay');
+    const galleryContent = document.getElementById('galleryContent');
+    overlay.style.display = 'flex';
+    if (galleryContent) {
+      galleryContent.scrollTop = 0;
+    }
+    renderGalleryContent();
+  };
 
   window.closeGalleryModal = function() {
     document.getElementById('galleryOverlay').style.display = 'none';
@@ -680,69 +812,66 @@ window.openGalleryModal = function() {
     });
   };
 
- // 과거에 올린 사진까지 DB에서 전체 조회하여 사진첩에 렌더링
-async function renderGalleryContent() {
-  const galleryContent = document.getElementById('galleryContent');
-  galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오는 중...</div>';
-  galleryContent.scrollTop = 0;
-
-  try {
-    const snapshot = await get(messagesRef);
-    if (!snapshot.exists()) {
-      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
-      return;
-    }
-
-    const data = snapshot.val();
-    const photoItems = Object.keys(data)
-      .map(key => ({ key, ...data[key] }))
-      .filter(item => item.image)
-      .sort((a, b) => b.timestamp - a.timestamp);
-
-    if (photoItems.length === 0) {
-      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
-      return;
-    }
-
-    galleryContent.innerHTML = '';
-
-    photoItems.forEach(item => {
-      const defaultCaption = `${formatDateShort(item.timestamp)} · ${item.sender}`;
-      const displayTitle = item.photoTitle || defaultCaption;
-
-      const card = document.createElement('div');
-      card.className = 'gallery-photo-item';
-
-      const galleryImg = document.createElement('img');
-      galleryImg.className = 'gallery-photo-thumb';
-      galleryImg.src = item.image;
-      galleryImg.alt = displayTitle;
-      galleryImg.onclick = () => {
-        openImageModal(item.image, true);
-      };
-
-      const captionDiv = document.createElement('div');
-      captionDiv.className = 'gallery-photo-caption';
-      captionDiv.innerText = displayTitle;
-      captionDiv.title = '클릭하여 사진 제목 수정';
-      captionDiv.onclick = (e) => {
-        e.stopPropagation();
-        editPhotoTitle(item.key, item.photoTitle || defaultCaption);
-      };
-
-      card.appendChild(galleryImg);
-      card.appendChild(captionDiv);
-      galleryContent.appendChild(card);
-    });
-
-    // 4. 사진 카드가 전부 DOM에 꽂힌 직후 다시 한번 최상단 고정
+  async function renderGalleryContent() {
+    const galleryContent = document.getElementById('galleryContent');
+    galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오는 중...</div>';
     galleryContent.scrollTop = 0;
 
-  } catch (err) {
-    console.error("사진첩 전체 로드 실패:", err);
-    galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오지 못했습니다.</div>';
+    try {
+      const snapshot = await get(messagesRef);
+      if (!snapshot.exists()) {
+        galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
+        return;
+      }
+
+      const data = snapshot.val();
+      const photoItems = Object.keys(data)
+        .map(key => ({ key, ...data[key] }))
+        .filter(item => item.image)
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+      if (photoItems.length === 0) {
+        galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">— 아직 등록된 사진이 없습니다 —</div>';
+        return;
+      }
+
+      galleryContent.innerHTML = '';
+
+      photoItems.forEach(item => {
+        const defaultCaption = `${formatDateShort(item.timestamp)} · ${item.sender}`;
+        const displayTitle = item.photoTitle || defaultCaption;
+
+        const card = document.createElement('div');
+        card.className = 'gallery-photo-item';
+
+        const galleryImg = document.createElement('img');
+        galleryImg.className = 'gallery-photo-thumb';
+        galleryImg.src = item.image;
+        galleryImg.alt = displayTitle;
+        galleryImg.onclick = () => {
+          openImageModal(item.image, true);
+        };
+
+        const captionDiv = document.createElement('div');
+        captionDiv.className = 'gallery-photo-caption';
+        captionDiv.innerText = displayTitle;
+        captionDiv.title = '클릭하여 사진 제목 수정';
+        captionDiv.onclick = (e) => {
+          e.stopPropagation();
+          editPhotoTitle(item.key, item.photoTitle || defaultCaption);
+        };
+
+        card.appendChild(galleryImg);
+        card.appendChild(captionDiv);
+        galleryContent.appendChild(card);
+      });
+
+      galleryContent.scrollTop = 0;
+    } catch (err) {
+      console.error("사진첩 로드 실패:", err);
+      galleryContent.innerHTML = '<div style="width: 100%; text-align: center; color: #a09589; font-size: 13px; padding-top: 36px;">사진첩을 불러오지 못했습니다.</div>';
+    }
   }
-}
 
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
@@ -856,7 +985,7 @@ async function renderGalleryContent() {
         keys.forEach((key) => {
           const msg = data[key];
           if (!document.querySelector(`[data-key="${key}"]`)) {
-            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image, false, msg.photoTitle || '');
+            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image, false, msg.photoTitle || '', msg.replyTo || null);
             chatSpace.insertBefore(node, chatSpace.firstChild);
             oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
           }
@@ -882,9 +1011,9 @@ async function renderGalleryContent() {
 
     if (data && !document.querySelector(`[data-key="${key}"]`)) {
       const timeStr = formatTime(data.timestamp);
-      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image);
+      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image && !data.replyTo);
 
-      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '');
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '', data.replyTo || null);
       chatSpace.appendChild(node);
 
       lastSender = data.sender;
@@ -956,8 +1085,17 @@ async function renderGalleryContent() {
       payload.image = currentBase64Image;
     }
 
+    if (currentReplyTarget) {
+      payload.replyTo = {
+        key: currentReplyTarget.key,
+        sender: currentReplyTarget.sender,
+        text: currentReplyTarget.text
+      };
+    }
+
     push(messagesRef, payload).then(() => {
       clearAttachedImage();
+      clearReplyingTarget();
       input.focus();
       scrollToBottom();
     }).catch((error) => {
