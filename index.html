@@ -41,7 +41,7 @@
       }
     }
 
-    /* 상단 슬림 인덱스 스트립 */
+    /* 상단 슬림 인덱스 스트립 (고정) */
     .postit-index-bar {
       position: absolute;
       top: -16px;
@@ -58,11 +58,7 @@
       border-bottom: none;
       cursor: pointer;
       box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.04);
-      transition: transform 0.15s ease;
       display: block;
-    }
-
-    .postit-strip:hover {
     }
 
     /* 대화 영역 */
@@ -114,7 +110,7 @@
       text-align: left;
     }
 
-    /* 정돈된 디스코드 스타일 답장 인용 헤더 */
+    /* 답장 인용 헤더 */
     .reply-quote-header {
       display: inline-flex;
       align-items: center;
@@ -124,9 +120,6 @@
       margin-bottom: 4px;
       cursor: pointer;
       max-width: 100%;
-      opacity: 1;
-    }
-    .reply-quote-header:hover {
     }
 
     .my-msg .reply-quote-header {
@@ -136,17 +129,19 @@
 
     .reply-icon {
       font-size: 11px;
-      color: #a89d91;
+      color: #7b6d61;
       flex-shrink: 0;
     }
 
     .reply-user-tag {
       font-weight: 700;
-      color: #7b6d61;
+      color: #4a3e35;
       flex-shrink: 0;
     }
 
     .reply-snippet {
+      color: #5a4e44;
+      font-size: 11px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -169,10 +164,6 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       cursor: pointer;
       display: inline-block;
-      transition: transform 0.15s ease;
-    }
-    .attached-photo-frame:hover {
-      transform: scale(1.02);
     }
     .attached-img {
       max-width: 200px;
@@ -180,6 +171,68 @@
       display: block;
       border-radius: 2px;
       object-fit: cover;
+    }
+
+    /* 시안 반영: 파일 첨부 다운로드 카드 */
+    .attached-file-card {
+      margin-top: 6px;
+      background: #ffffff;
+      padding: 8px 12px;
+      border: 1px solid #e0d8ce;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      max-width: 260px;
+      transition: background-color 0.15s ease;
+    }
+    .attached-file-card:hover {
+      background: #faf6f0;
+    }
+    .file-doc-icon {
+      width: 20px;
+      height: 26px;
+      border: 1.5px solid #a09589;
+      border-radius: 2px;
+      background: #fdfbf7;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 3px;
+      flex-shrink: 0;
+    }
+    .file-doc-line {
+      height: 1.5px;
+      background: #a09589;
+      border-radius: 1px;
+    }
+    .file-doc-line.short {
+      width: 65%;
+    }
+
+    .file-card-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      text-align: left;
+    }
+    .file-card-name {
+      font-size: 13px;
+      color: #3e352d;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-card-size {
+      font-size: 11px;
+      color: #a09589;
+      margin-top: 2px;
     }
 
     /* 잉크 색상 */
@@ -252,7 +305,7 @@
       padding: 0 4px;
     }
 
-    /* 사진 첨부 미리보기 바 */
+    /* 첨부 미리보기 바 */
     .attach-preview-bar {
       display: none;
       padding: 8px 20px;
@@ -262,16 +315,32 @@
       gap: 10px;
     }
     .preview-thumb {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       object-fit: cover;
       border-radius: 3px;
       border: 1px solid #d4c8bb;
+      display: none;
+    }
+    .preview-file-icon {
+      width: 22px;
+      height: 28px;
+      border: 1.5px solid #8c7b6c;
+      border-radius: 2px;
+      background: #fff;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 3px;
     }
     .preview-info {
       font-size: 12px;
       color: #7a6e62;
       flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .cancel-attach-btn {
       background: none;
@@ -422,7 +491,6 @@
       cursor: pointer;
       line-height: 1;
       padding: 4px;
-      transition: color 0.15s;
     }
     .gallery-close-x:hover {
       color: #3e352d;
@@ -469,10 +537,6 @@
       border-radius: 2px;
       display: block;
       cursor: pointer;
-      transition: opacity 0.15s ease;
-    }
-    .gallery-photo-thumb:hover {
-      opacity: 0.92;
     }
 
     .gallery-photo-caption {
@@ -485,7 +549,6 @@
       text-overflow: ellipsis;
       cursor: pointer;
       text-align: center;
-      transition: color 0.15s;
     }
     .gallery-photo-caption:hover {
       color: #2c2520;
@@ -513,16 +576,21 @@
     <button class="cancel-reply-btn" onclick="clearReplyingTarget()" title="답장 취소">✕</button>
   </div>
 
-  <!-- 사진 첨부 미리보기 바 -->
+  <!-- 첨부 미리보기 바 -->
   <div class="attach-preview-bar" id="previewBar">
     <img id="previewImg" class="preview-thumb" src="" alt="미리보기">
-    <span class="preview-info">사진이 첨부되었습니다.</span>
-    <button class="cancel-attach-btn" onclick="clearAttachedImage()" title="첨부 취소">✕</button>
+    <div id="previewFileIcon" class="preview-file-icon">
+      <div class="file-doc-line"></div>
+      <div class="file-doc-line"></div>
+      <div class="file-doc-line short"></div>
+    </div>
+    <span class="preview-info" id="previewInfo">첨부되었습니다.</span>
+    <button class="cancel-attach-btn" onclick="clearAttachment()" title="첨부 취소">✕</button>
   </div>
 
   <div class="input-box">
-    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
-    <button class="clip-btn" onclick="document.getElementById('fileInput').click()" title="사진 첨부">
+    <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+    <button class="clip-btn" onclick="document.getElementById('fileInput').click()" title="사진 및 파일 첨부">
       <svg class="clip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
       </svg>
@@ -532,7 +600,7 @@
   </div>
 </div>
 
-<!-- 사진 전체화면 확대 라이트박스 -->
+<!-- 확대 라이트박스 -->
 <div class="image-modal" id="imageModal" onclick="closeImageModal()">
   <img id="modalImg" src="" alt="확대된 사진">
 </div>
@@ -567,7 +635,7 @@
     remove 
   } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyD4gexCqmXXR0BoWWIl3j84De-NrX7msYA",
     authDomain: "paper-boat-695f8.firebaseapp.com",
     databaseURL: "https://paper-boat-695f8-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -587,7 +655,8 @@ const firebaseConfig = {
 
   const chatSpace = document.getElementById('chatSpace');
   const sendBtn = document.getElementById('sendBtn');
-  let currentBase64Image = null;
+  
+  let currentAttachment = null;
   let openedFromGallery = false;
   let currentReplyTarget = null;
 
@@ -604,6 +673,14 @@ const firebaseConfig = {
   let isInitialLoad = true;
   let lastSender = null;
   let lastTimeStr = null;
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
 
   function formatTime(timestamp) {
     if (!timestamp) return '';
@@ -636,7 +713,7 @@ const firebaseConfig = {
   }
 
   window.setReplyingTarget = function(key, sender, text) {
-    currentReplyTarget = { key, sender, text: text || (key ? '사진' : '') };
+    currentReplyTarget = { key, sender, text: text || (key ? '첨부 파일' : '') };
     const bar = document.getElementById('replyingBar');
     const textSpan = document.getElementById('replyingText');
     textSpan.innerText = `↩ ${sender}님에게 답장: ${currentReplyTarget.text}`;
@@ -658,7 +735,7 @@ const firebaseConfig = {
     }
   };
 
-  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false, photoTitle = '', replyTo = null) {
+  function createMessageNode(sender, message, timestamp, key, imageUrl = null, isConsecutive = false, photoTitle = '', replyTo = null, fileObj = null) {
     const wrapper = document.createElement('div');
     const isMyMsg = (sender === currentUser);
     const alignClass = isMyMsg ? 'my-msg' : 'other-msg';
@@ -671,7 +748,7 @@ const firebaseConfig = {
     wrapper.setAttribute('data-time', formatTime(timestamp));
     if (photoTitle) wrapper.setAttribute('data-photo-title', photoTitle);
 
-    // 정돈된 답장 인용 헤더
+    // 답장 헤더
     if (replyTo && replyTo.sender) {
       const quoteHeader = document.createElement('div');
       quoteHeader.className = 'reply-quote-header';
@@ -687,7 +764,7 @@ const firebaseConfig = {
 
       const snippet = document.createElement('span');
       snippet.className = 'reply-snippet';
-      snippet.innerText = replyTo.text || '사진';
+      snippet.innerText = replyTo.text || '첨부 파일';
 
       quoteHeader.appendChild(icon);
       quoteHeader.appendChild(userTag);
@@ -702,6 +779,7 @@ const firebaseConfig = {
       wrapper.appendChild(line);
     }
 
+    // 사진 렌더링
     if (imageUrl) {
       const frame = document.createElement('div');
       frame.className = 'attached-photo-frame';
@@ -722,6 +800,41 @@ const firebaseConfig = {
       wrapper.appendChild(frame);
     }
 
+    // 시안 디자인: 파일 카드 렌더링
+    if (fileObj && fileObj.fileData) {
+      const fileCard = document.createElement('a');
+      fileCard.className = 'attached-file-card';
+      fileCard.href = fileObj.fileData;
+      fileCard.download = fileObj.fileName || 'download_file';
+      fileCard.title = `${fileObj.fileName} 다운로드`;
+
+      const docIcon = document.createElement('div');
+      docIcon.className = 'file-doc-icon';
+      docIcon.innerHTML = `
+        <div class="file-doc-line"></div>
+        <div class="file-doc-line"></div>
+        <div class="file-doc-line short"></div>
+      `;
+
+      const details = document.createElement('div');
+      details.className = 'file-card-details';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'file-card-name';
+      nameSpan.innerText = fileObj.fileName || '첨부 파일';
+
+      const sizeSpan = document.createElement('span');
+      sizeSpan.className = 'file-card-size';
+      sizeSpan.innerText = `${formatBytes(fileObj.fileSize)} · 클릭 시 다운로드`;
+
+      details.appendChild(nameSpan);
+      details.appendChild(sizeSpan);
+      fileCard.appendChild(docIcon);
+      fileCard.appendChild(details);
+
+      wrapper.appendChild(fileCard);
+    }
+
     const metaDiv = document.createElement('div');
     metaDiv.className = 'msg-meta';
 
@@ -737,7 +850,7 @@ const firebaseConfig = {
       const replyBtn = document.createElement('button');
       replyBtn.className = 'action-btn';
       replyBtn.innerText = '답장';
-      replyBtn.onclick = () => setReplyingTarget(key, sender, message);
+      replyBtn.onclick = () => setReplyingTarget(key, sender, message || (fileObj ? fileObj.fileName : ''));
       actionsDiv.appendChild(replyBtn);
 
       if (isMyMsg) {
@@ -869,46 +982,80 @@ const firebaseConfig = {
     }
   }
 
+  // 파일 선택 처리 (이미지 vs 일반 파일 분기)
   window.handleFileSelect = function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1600;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('5MB 이하의 파일만 첨부할 수 있습니다.');
+      document.getElementById('fileInput').value = '';
+      return;
+    }
 
-        if (width > height && width > maxDim) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else if (height > maxDim) {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
+    const previewBar = document.getElementById('previewBar');
+    const previewImg = document.getElementById('previewImg');
+    const previewFileIcon = document.getElementById('previewFileIcon');
+    const previewInfo = document.getElementById('previewInfo');
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, width, height);
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1600;
 
-        currentBase64Image = canvas.toDataURL('image/jpeg', 0.88);
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
 
-        document.getElementById('previewImg').src = currentBase64Image;
-        document.getElementById('previewBar').style.display = 'flex';
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const base64 = canvas.toDataURL('image/jpeg', 0.88);
+          currentAttachment = { type: 'image', data: base64 };
+
+          previewImg.src = base64;
+          previewImg.style.display = 'block';
+          previewFileIcon.style.display = 'none';
+          previewInfo.innerText = `사진 첨부됨 (${file.name})`;
+          previewBar.style.display = 'flex';
+        };
+        img.src = event.target.result;
       };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        currentAttachment = {
+          type: 'file',
+          data: event.target.result,
+          name: file.name,
+          size: file.size
+        };
+
+        previewImg.style.display = 'none';
+        previewFileIcon.style.display = 'flex';
+        previewInfo.innerText = `${file.name} (${formatBytes(file.size)})`;
+        previewBar.style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  window.clearAttachedImage = function() {
-    currentBase64Image = null;
+  window.clearAttachment = function() {
+    currentAttachment = null;
     document.getElementById('fileInput').value = '';
     document.getElementById('previewBar').style.display = 'none';
   };
@@ -981,7 +1128,8 @@ const firebaseConfig = {
         keys.forEach((key) => {
           const msg = data[key];
           if (!document.querySelector(`[data-key="${key}"]`)) {
-            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image, false, msg.photoTitle || '', msg.replyTo || null);
+            const filePayload = (msg.fileData) ? { fileData: msg.fileData, fileName: msg.fileName, fileSize: msg.fileSize } : null;
+            const node = createMessageNode(msg.sender, msg.message, msg.timestamp, key, msg.image, false, msg.photoTitle || '', msg.replyTo || null, filePayload);
             chatSpace.insertBefore(node, chatSpace.firstChild);
             oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
           }
@@ -1007,9 +1155,10 @@ const firebaseConfig = {
 
     if (data && !document.querySelector(`[data-key="${key}"]`)) {
       const timeStr = formatTime(data.timestamp);
-      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image && !data.replyTo);
+      const isConsecutive = (lastSender === data.sender && lastTimeStr === timeStr && !data.image && !data.fileData && !data.replyTo);
 
-      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '', data.replyTo || null);
+      const filePayload = (data.fileData) ? { fileData: data.fileData, fileName: data.fileName, fileSize: data.fileSize } : null;
+      const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '', data.replyTo || null, filePayload);
       chatSpace.appendChild(node);
 
       lastSender = data.sender;
@@ -1066,7 +1215,7 @@ const firebaseConfig = {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
 
-    if (!text && !currentBase64Image) return;
+    if (!text && !currentAttachment) return;
 
     input.value = '';
     sendBtn.disabled = true;
@@ -1077,8 +1226,14 @@ const firebaseConfig = {
       timestamp: Date.now()
     };
 
-    if (currentBase64Image) {
-      payload.image = currentBase64Image;
+    if (currentAttachment) {
+      if (currentAttachment.type === 'image') {
+        payload.image = currentAttachment.data;
+      } else if (currentAttachment.type === 'file') {
+        payload.fileData = currentAttachment.data;
+        payload.fileName = currentAttachment.name;
+        payload.fileSize = currentAttachment.size;
+      }
     }
 
     if (currentReplyTarget) {
@@ -1090,7 +1245,7 @@ const firebaseConfig = {
     }
 
     push(messagesRef, payload).then(() => {
-      clearAttachedImage();
+      clearAttachment();
       clearReplyingTarget();
       input.focus();
       scrollToBottom();
