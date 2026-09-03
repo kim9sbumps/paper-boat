@@ -690,8 +690,8 @@
       osc.frequency.setValueAtTime(880, now);
       osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
 
-      // 볼륨을 아주 작고 부드럽게 감쇠 (0.05 볼륨)
-      gain.gain.setValueAtTime(0.05, now);
+      // 볼륨을 아주 작고 부드럽게 감쇠
+      gain.gain.setValueAtTime(0.15, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
 
       osc.connect(gain);
@@ -1193,9 +1193,8 @@
 
       // ★ 알림음 재생 조건:
       // 1) 초기 데이터 로딩이 끝난 이후
-      // 2) 현재 사용자가 '김솔음'인 경우
-      // 3) 내가 쓴 글이 아닌 상대방의 새 글일 때
-      if (!isInitialLoad && currentUser === '김솔음' && data.sender !== currentUser) {
+      // 2) 내가 쓴 글이 아닌 상대방의 새 글일 때
+      if (!isInitialLoad && data.sender !== currentUser) {
         playSoftChime();
       }
 
