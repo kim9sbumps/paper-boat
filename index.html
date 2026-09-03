@@ -674,6 +674,36 @@
   let lastSender = null;
   let lastTimeStr = null;
 
+  // 은은하고 작은 종소리/물방울 톤 알림음 (Web Audio API)
+  function playSoftChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      // 맑고 높은 차임 톤 (880Hz -> 1320Hz 화음감)
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+
+      // 볼륨을 아주 작고 부드럽게 감쇠 (0.05 볼륨)
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch (e) {
+      console.warn("알림음 재생 제한:", e);
+    }
+  }
+
   function formatBytes(bytes) {
     if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
@@ -1160,6 +1190,14 @@
       const filePayload = (data.fileData) ? { fileData: data.fileData, fileName: data.fileName, fileSize: data.fileSize } : null;
       const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '', data.replyTo || null, filePayload);
       chatSpace.appendChild(node);
+
+      // ★ 알림음 재생 조건:
+      // 1) 초기 데이터 로딩이 끝난 이후
+      // 2) 현재 사용자가 '김솔음'인 경우
+      // 3) 내가 쓴 글이 아닌 상대방의 새 글일 때
+      if (!isInitialLoad && currentUser === '김솔음' && data.sender !== currentUser) {
+        playSoftChime();
+      }
 
       lastSender = data.sender;
       lastTimeStr = timeStr;
