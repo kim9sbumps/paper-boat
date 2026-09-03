@@ -674,33 +674,46 @@
   let lastSender = null;
   let lastTimeStr = null;
 
-  // 은은하고 작은 종소리/물방울 톤 알림음 (Web Audio API)
+  // AudioContext 단일 인스턴스 관리
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioCtx = new AudioCtx();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  // 사용자가 페이지 아무 곳이나 한 번 클릭/터치하면 오디오 락 해제
+  window.addEventListener('click', initAudio, { once: true });
+  window.addEventListener('keydown', initAudio, { once: true });
+
   function playSoftChime() {
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      initAudio();
+      if (!audioCtx || audioCtx.state !== 'running') return; // 클릭 전이면 조용히 패스 (에러/경고 방지)
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
 
       osc.type = 'sine';
-      // 맑고 높은 차임 톤 (880Hz -> 1320Hz 화음감)
       osc.frequency.setValueAtTime(880, now);
       osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
 
-      // 볼륨을 아주 작고 부드럽게 감쇠
-      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.setValueAtTime(0.12, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(audioCtx.destination);
 
       osc.start(now);
       osc.stop(now + 0.35);
     } catch (e) {
-      console.warn("알림음 재생 제한:", e);
+      // 무시
     }
   }
 
@@ -1177,7 +1190,7 @@
     }
   }
 
-  const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
+const initialQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
 
   onChildAdded(initialQuery, (snapshot) => {
     const data = snapshot.val();
@@ -1191,9 +1204,7 @@
       const node = createMessageNode(data.sender, data.message, data.timestamp, key, data.image, isConsecutive, data.photoTitle || '', data.replyTo || null, filePayload);
       chatSpace.appendChild(node);
 
-      // ★ 알림음 재생 조건:
-      // 1) 초기 데이터 로딩이 끝난 이후
-      // 2) 내가 쓴 글이 아닌 상대방의 새 글일 때
+      // ★ 알림음 재생 조건: 초기 로딩 완료 후 + 상대방 새 메시지일 때
       if (!isInitialLoad && data.sender !== currentUser) {
         playSoftChime();
       }
@@ -1237,10 +1248,11 @@
     }
   });
 
-  setTimeout(() => {
+  // ★ 기존 setTimeout 대신: 초기 쿼리 완료 후 안전하게 해제
+  get(initialQuery).then(() => {
     isInitialLoad = false;
     scrollToBottom();
-  }, 400);
+  });
 
   chatSpace.addEventListener('scroll', () => {
     if (chatSpace.scrollTop <= 40) {
