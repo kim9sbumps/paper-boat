@@ -579,6 +579,12 @@
   aspect-ratio: 1 / 1;
 }
 
+/* 홀수 개일 때 마지막 사진을 2칸 전체 너비로 확장 */
+.multi-photo-item:last-child:nth-child(odd) {
+  grid-column: span 2;
+  aspect-ratio: 2 / 1; /* 가로로 넓어진 비율에 맞춰 안정감 있게 조절 */
+}
+
 .multi-photo-item img {
   width: 100%;
   height: 100%;
