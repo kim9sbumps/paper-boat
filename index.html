@@ -1261,19 +1261,18 @@
           const msg = data[key];
           if (!document.querySelector(`[data-key="${key}"]`)) {
             const filePayload = (msg.fileData) ? { fileData: msg.fileData, fileName: msg.fileName, fileSize: msg.fileSize } : null;
-            // 인자 마지막에 data.images 전달
-const node = createMessageNode(
-  data.sender, 
-  data.message, 
-  data.timestamp, 
-  key, 
-  data.image, 
-  isConsecutive, 
-  data.photoTitle || '', 
-  data.replyTo || null, 
-  filePayload, 
-  data.images || null
-);
+            const node = createMessageNode(
+              msg.sender, 
+              msg.message, 
+              msg.timestamp, 
+              key, 
+              msg.image, 
+              false, 
+              msg.photoTitle || '', 
+              msg.replyTo || null, 
+              filePayload, 
+              msg.images || null
+            );
             chatSpace.insertBefore(node, chatSpace.firstChild);
             oldestTimestamp = Math.min(oldestTimestamp, msg.timestamp);
           }
